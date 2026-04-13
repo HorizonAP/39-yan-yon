@@ -1,150 +1,156 @@
-@import "tailwindcss";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
-@plugin "tailwindcss-animate";
 
-@custom-variant dark (&:is(.dark *));
 
-@theme {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
 
-  --color-card: var(--card);
-  --color-card-foreground: var(--card-foreground);
-
-  --color-popover: var(--popover);
-  --color-popover-foreground: var(--popover-foreground);
-
-  --color-primary: var(--primary);
-  --color-primary-foreground: var(--primary-foreground);
-
-  --color-secondary: var(--secondary);
-  --color-secondary-foreground: var(--secondary-foreground);
-
-  --color-muted: var(--muted);
-  --color-muted-foreground: var(--muted-foreground);
-
-  --color-accent: var(--accent);
-  --color-accent-foreground: var(--accent-foreground);
-
-  --color-destructive: var(--destructive);
-  --color-destructive-foreground: var(--destructive-foreground);
-
-  --color-border: var(--border);
-  --color-input: var(--input);
-  --color-ring: var(--ring);
-
-  --radius-lg: var(--radius);
-  --radius-md: calc(var(--radius) - 2px);
-  --radius-sm: calc(var(--radius) - 4px);
-
-  --animate-accordion-down: accordion-down 0.2s ease-out;
-  --animate-accordion-up: accordion-up 0.2s ease-out;
-
-  @keyframes accordion-down {
-    from {
-      height: 0;
-    }
-    to {
-      height: var(--radix-accordion-content-height);
-    }
-  }
-  @keyframes accordion-up {
-    from {
-      height: var(--radix-accordion-content-height);
-    }
-    to {
-      height: 0;
-    }
-  }
-}
-
+/* ── Light fallback (app always forces .dark) ─────────────────── */
 :root {
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
-  --destructive-foreground: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
-  --chart-1: oklch(0.646 0.222 41.116);
-  --chart-2: oklch(0.6 0.118 184.704);
-  --chart-3: oklch(0.398 0.07 227.392);
-  --chart-4: oklch(0.828 0.189 84.429);
-  --chart-5: oklch(0.769 0.188 70.08);
-  --radius: 0.625rem;
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
+  --background:          #ffffff;
+  --foreground:          #0e0e13;
+  --card:                #f8f5fd;
+  --card-foreground:     #0e0e13;
+  --popover:             #ffffff;
+  --popover-foreground:  #0e0e13;
+  --primary:             #6366f1;
+  --primary-foreground:  #ffffff;
+  --secondary:           #8b5cf6;
+  --secondary-foreground:#ffffff;
+  --muted:               #f1f0f7;
+  --muted-foreground:    #6b7280;
+  --accent:              #ede9fe;
+  --accent-foreground:   #4f46e5;
+  --destructive:         #ef4444;
+  --destructive-foreground: #ffffff;
+  --border:              #e5e7eb;
+  --input:               #f3f4f6;
+  --ring:                #6366f1;
+  --radius:              0.5rem;
+  --sidebar:             #f8f5fd;
+  --sidebar-foreground:  #0e0e13;
+  --sidebar-primary:     #6366f1;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent:      #ede9fe;
+  --sidebar-accent-foreground: #4f46e5;
+  --sidebar-border:      #e5e7eb;
+  --sidebar-ring:        #6366f1;
 }
 
+/* ── THE NOCTURNAL ETHEREAL — Stitch Design System (Dark Mode) ── */
 .dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.145 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.145 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.985 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.396 0.141 25.723);
-  --destructive-foreground: oklch(0.637 0.237 25.331);
-  --border: oklch(0.269 0 0);
-  --input: oklch(0.269 0 0);
-  --ring: oklch(0.439 0 0);
-  --chart-1: oklch(0.488 0.243 264.376);
-  --chart-2: oklch(0.696 0.17 162.48);
-  --chart-3: oklch(0.769 0.188 70.08);
-  --chart-4: oklch(0.627 0.265 303.9);
-  --chart-5: oklch(0.645 0.246 16.439);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(0.269 0 0);
-  --sidebar-ring: oklch(0.439 0 0);
+  /* ── Surfaces — Frosted Obsidian stack ── */
+  --background:          #0e0e13;   /* surface — depth 0        */
+  --foreground:          #f8f5fd;   /* on-surface               */
+  --card:                #131318;   /* surface-container-low    */
+  --card-foreground:     #f8f5fd;
+  --popover:             #1f1f26;   /* surface-container-high   */
+  --popover-foreground:  #f8f5fd;
+
+  /* ── Primary — Indigo ── */
+  --primary:             #a3a6ff;   /* primary light            */
+  --primary-foreground:  #0e0e13;   /* on-primary               */
+
+  /* ── Secondary — Violet ── */
+  --secondary:           #5516be;   /* secondary-container      */
+  --secondary-foreground:#d9c8ff;   /* on-secondary-container   */
+
+  /* ── Muted / Surface mid ── */
+  --muted:               #19191f;   /* surface-container        */
+  --muted-foreground:    #acaab1;   /* on-surface-variant       */
+
+  /* ── Accent ── */
+  --accent:              #25252c;   /* surface-container-highest*/
+  --accent-foreground:   #f8f5fd;
+
+  /* ── Destructive — Rose ── */
+  --destructive:         #ff6e84;   /* error                    */
+  --destructive-foreground: #490013;/* on-error                 */
+
+  /* ── Borders & Ring ── */
+  --border:              rgba(72, 71, 77, 0.35);
+  --input:               #0a0a0f;   /* surface-container-lowest */
+  --ring:                #a3a6ff;
+
+  --radius: 0.5rem;
+
+  /* ── Sidebar ── */
+  --sidebar:             #131318;
+  --sidebar-foreground:  #f8f5fd;
+  --sidebar-primary:     #a3a6ff;
+  --sidebar-primary-foreground: #0e0e13;
+  --sidebar-accent:      rgba(163,166,255, 0.08);
+  --sidebar-accent-foreground: #a3a6ff;
+  --sidebar-border:      rgba(72,71,77, 0.25);
+  --sidebar-ring:        #a3a6ff;
 }
 
 @layer base {
   * {
     @apply border-border;
   }
+
+  /* Force dark background unconditionally */
+  html, html.dark {
+    background-color: #0e0e13;
+    color: #f8f5fd;
+    color-scheme: dark;
+    min-height: 100%;
+  }
+
   body {
-    @apply bg-background text-foreground;
+    background-color: #0e0e13;
+    color: #f8f5fd;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    font-feature-settings: "cv11", "ss01", "ss03";
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    min-height: 100vh;
+    margin: 0;
+  }
+
+  #root {
+    min-height: 100vh;
   }
 }
 
 @theme inline {
-  --color-sidebar: var(--sidebar);
-  --color-sidebar-foreground: var(--sidebar-foreground);
-  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar:                    var(--sidebar);
+  --color-sidebar-foreground:         var(--sidebar-foreground);
+  --color-sidebar-primary:            var(--sidebar-primary);
   --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
-  --color-sidebar-accent: var(--sidebar-accent);
-  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
-  --color-sidebar-border: var(--sidebar-border);
-  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-accent:             var(--sidebar-accent);
+  --color-sidebar-accent-foreground:  var(--sidebar-accent-foreground);
+  --color-sidebar-border:             var(--sidebar-border);
+  --color-sidebar-ring:               var(--sidebar-ring);
 }
+
+/* ── Glassmorphism card utilities ─────────────────────────────── */
+.glass-card {
+  background:            rgba(26, 26, 46, 0.40);
+  backdrop-filter:       blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border:                1px solid rgba(45, 47, 74, 0.50);
+  border-radius:         12px;
+}
+.glass-card-subtle {
+  background:            rgba(19, 19, 24, 0.80);
+  backdrop-filter:       blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border:                1px solid rgba(72, 71, 77, 0.25);
+  border-radius:         8px;
+}
+
+/* ── Gradient text (brand) ────────────────────────────────────── */
+.gradient-text {
+  background: linear-gradient(135deg, #a3a6ff 0%, #ac8aff 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ── Custom scrollbar ─────────────────────────────────────────── */
+::-webkit-scrollbar              { width: 5px; height: 5px; }
+::-webkit-scrollbar-track        { background: transparent; }
+::-webkit-scrollbar-thumb        { background: rgba(163,166,255,0.18); border-radius: 99px; }
+::-webkit-scrollbar-thumb:hover  { background: rgba(163,166,255,0.32); }

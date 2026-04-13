@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>39-YanYon | Transaction History</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "surface-variant": "#25252c",
+                        "on-error": "#490013",
+                        "surface-container-lowest": "#000000",
+                        "tertiary-dim": "#ef81c4",
+                        "on-primary-fixed": "#000000",
+                        "surface-container-high": "#1f1f26",
+                        "background": "#0e0e13",
+                        "error-container": "#a70138",
+                        "primary-fixed-dim": "#8387ff",
+                        "tertiary-fixed": "#ff8ed2",
+                        "on-background": "#f8f5fd",
+                        "primary-dim": "#6063ee",
+                        "inverse-on-surface": "#55545a",
+                        "primary": "#a3a6ff",
+                        "secondary-container": "#5516be",
+                        "on-secondary": "#280067",
+                        "on-surface": "#f8f5fd",
+                        "surface": "#0e0e13",
+                        "on-secondary-container": "#d9c8ff",
+                        "inverse-primary": "#494bd7",
+                        "error-dim": "#d73357",
+                        "secondary-fixed-dim": "#ceb9ff",
+                        "inverse-surface": "#fbf8ff",
+                        "outline": "#76747b",
+                        "surface-container": "#19191f",
+                        "secondary-fixed": "#dac9ff",
+                        "on-primary-container": "#0a0081",
+                        "tertiary": "#ffa5d9",
+                        "on-tertiary-container": "#63054a",
+                        "primary-fixed": "#9396ff",
+                        "error": "#ff6e84",
+                        "on-primary": "#0f00a4",
+                        "on-surface-variant": "#acaab1",
+                        "on-primary-fixed-variant": "#0e009d",
+                        "surface-bright": "#2b2b33",
+                        "surface-tint": "#a3a6ff",
+                        "secondary-dim": "#8455ef",
+                        "on-secondary-fixed": "#40009b",
+                        "surface-container-low": "#131318",
+                        "tertiary-container": "#ff8ed2",
+                        "tertiary-fixed-dim": "#ef81c4",
+                        "outline-variant": "#48474d",
+                        "primary-container": "#9396ff",
+                        "surface-dim": "#0e0e13",
+                        "on-error-container": "#ffb2b9",
+                        "on-tertiary-fixed": "#3b002b",
+                        "on-secondary-fixed-variant": "#5f28c8",
+                        "surface-container-highest": "#25252c",
+                        "on-tertiary-fixed-variant": "#6e1354",
+                        "secondary": "#ac8aff",
+                        "on-tertiary": "#701455"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "fontFamily": {
+                        "headline": ["Inter"],
+                        "body": ["Inter"],
+                        "label": ["Inter"]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        body { font-family: 'Inter', sans-serif; background-color: #0e0e13; color: #f8f5fd; }
+        .glass-card {
+            background: rgba(26, 26, 46, 0.4);
+            backdrop-filter: blur(24px);
+            border: 1px solid rgba(45, 47, 74, 0.5);
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+    </style>
+</head>
+<body class="bg-surface text-on-surface min-h-screen selection:bg-primary/30">
+<!-- Sidebar Navigation Shell -->
+<nav class="fixed left-0 top-0 h-screen w-64 bg-[#131318] flex flex-col py-8 gap-6 z-50">
+<div class="px-8 mb-4">
+<h1 class="text-indigo-400 font-bold font-inter text-sm uppercase tracking-widest">39-YanYon Admin</h1>
+<p class="text-slate-500 text-xs mt-1">Inventory Controller</p>
+</div>
+<div class="flex flex-col flex-1">
+<a class="flex items-center gap-4 px-8 py-3 text-slate-500 hover:text-indigo-200 hover:bg-white/5 transition-colors duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="dashboard">dashboard</span>
+<span class="font-inter text-sm font-medium uppercase tracking-widest">Dashboard</span>
+</a>
+<a class="flex items-center gap-4 px-8 py-3 text-slate-500 hover:text-indigo-200 hover:bg-white/5 transition-colors duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="inventory_2">inventory_2</span>
+<span class="font-inter text-sm font-medium uppercase tracking-widest">Inventory</span>
+</a>
+<!-- Active Navigation Tab: Transactions -->
+<a class="flex items-center gap-4 px-8 py-3 text-indigo-300 border-r-2 border-indigo-500 bg-indigo-500/10 transition-colors duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="history_edu">history_edu</span>
+<span class="font-inter text-sm font-medium uppercase tracking-widest">Transactions</span>
+</a>
+<a class="flex items-center gap-4 px-8 py-3 text-slate-500 hover:text-indigo-200 hover:bg-white/5 transition-colors duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="local_shipping">local_shipping</span>
+<span class="font-inter text-sm font-medium uppercase tracking-widest">Suppliers</span>
+</a>
+<a class="flex items-center gap-4 px-8 py-3 mt-auto text-slate-500 hover:text-indigo-200 hover:bg-white/5 transition-colors duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+<span class="font-inter text-sm font-medium uppercase tracking-widest">Settings</span>
+</a>
+</div>
+</nav>
+<!-- Main Canvas -->
+<main class="ml-64 min-h-screen">
+<!-- Top Bar Shell -->
+<header class="fixed top-0 right-0 left-64 h-16 bg-slate-950/40 backdrop-blur-xl flex justify-between items-center px-8 z-40 shadow-[0_0_20px_rgba(99,102,241,0.05)]">
+<div class="flex items-center gap-2">
+<span class="text-xl font-semibold tracking-tighter text-indigo-300">39-YanYon</span>
+</div>
+<div class="flex items-center gap-6">
+<button class="text-slate-400 hover:bg-white/5 p-2 rounded-full transition-all duration-300 active:scale-95">
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+</button>
+<div class="flex items-center gap-3 pl-4 border-l border-outline-variant/20">
+<div class="text-right">
+<p class="text-sm font-medium text-on-surface">Alex Chen</p>
+<p class="text-[10px] text-on-surface-variant uppercase tracking-wider">Manager</p>
+</div>
+<span class="material-symbols-outlined text-indigo-400" data-icon="account_circle">account_circle</span>
+</div>
+</div>
+</header>
+<!-- Content Area -->
+<div class="pt-24 px-8 pb-12">
+<!-- Hero Header Section -->
+<div class="mb-12 flex flex-col md:flex-row md:items-end justify-between gap-6">
+<div>
+<h2 class="text-[3.5rem] font-extrabold leading-tight tracking-tight text-on-surface mb-2">Transaction History</h2>
+<p class="text-on-surface-variant max-w-xl">Comprehensive audit log of all inventory movements within the YanYon ecosystem.</p>
+</div>
+<button class="bg-gradient-to-br from-primary-dim to-primary text-on-primary-fixed font-semibold px-6 py-3 rounded-lg flex items-center gap-2 transition-transform active:scale-95 shadow-lg shadow-primary/10">
+<span class="material-symbols-outlined text-[20px]" data-icon="download">download</span>
+                    Export CSV
+                </button>
+</div>
+<!-- Filter Controls Shell -->
+<div class="glass-card rounded-xl p-4 mb-8 flex flex-wrap items-center gap-4">
+<div class="flex-1 min-w-[300px] relative">
+<span class="absolute left-4 top-1/2 -translate-y-1/2 material-symbols-outlined text-on-surface-variant text-[20px]" data-icon="search">search</span>
+<input class="w-full bg-surface-container-lowest border-outline-variant/20 focus:border-primary border rounded-lg py-3 pl-12 pr-4 text-sm text-on-surface placeholder:text-on-surface-variant/50 focus:ring-4 focus:ring-primary/5 transition-all outline-none" placeholder="Search product name, barcode, or reason..." type="text"/>
+</div>
+<div class="flex items-center gap-3 bg-surface-container-lowest px-4 py-2 rounded-lg border border-outline-variant/20">
+<span class="material-symbols-outlined text-primary-fixed-dim text-[18px]" data-icon="calendar_month">calendar_month</span>
+<span class="text-sm text-on-surface">Oct 01 - Oct 31, 2023</span>
+<span class="material-symbols-outlined text-on-surface-variant cursor-pointer" data-icon="arrow_drop_down">arrow_drop_down</span>
+</div>
+<div class="flex items-center gap-2">
+<button class="p-3 rounded-lg bg-surface-container-lowest border border-outline-variant/20 text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined" data-icon="filter_list">filter_list</span>
+</button>
+</div>
+</div>
+<!-- Transaction Table -->
+<div class="glass-card rounded-2xl overflow-hidden mb-8">
+<div class="overflow-x-auto no-scrollbar">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="bg-white/5">
+<th class="py-5 px-8 text-[11px] font-semibold text-on-surface-variant uppercase tracking-[0.1em]">Date &amp; Time</th>
+<th class="py-5 px-6 text-[11px] font-semibold text-on-surface-variant uppercase tracking-[0.1em]">Type</th>
+<th class="py-5 px-6 text-[11px] font-semibold text-on-surface-variant uppercase tracking-[0.1em]">Product</th>
+<th class="py-5 px-6 text-[11px] font-semibold text-on-surface-variant uppercase tracking-[0.1em]">Change</th>
+<th class="py-5 px-8 text-[11px] font-semibold text-on-surface-variant uppercase tracking-[0.1em]">Reason</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-outline-variant/10">
+<!-- Row 1 -->
+<tr class="hover:bg-white/5 transition-all duration-300">
+<td class="py-6 px-8">
+<p class="text-sm font-medium text-on-surface">Oct 24, 2023</p>
+<p class="text-xs text-on-surface-variant/70">14:20 PM</p>
+</td>
+<td class="py-6 px-6">
+<span class="inline-flex items-center px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-400 text-[11px] font-bold tracking-wider uppercase">
+                                        Stock In
+                                    </span>
+</td>
+<td class="py-6 px-6">
+<p class="text-sm font-bold text-on-surface">Pirelli Diablo Rosso IV</p>
+<p class="text-[11px] text-on-surface-variant font-mono">BC-92841022</p>
+</td>
+<td class="py-6 px-6">
+<p class="text-sm font-bold text-emerald-400">+ 20</p>
+</td>
+<td class="py-6 px-8 text-sm text-on-surface-variant">
+                                    Restock Arrival - Vendor #142
+                                </td>
+</tr>
+<!-- Row 2 -->
+<tr class="hover:bg-white/5 transition-all duration-300">
+<td class="py-6 px-8">
+<p class="text-sm font-medium text-on-surface">Oct 24, 2023</p>
+<p class="text-xs text-on-surface-variant/70">11:05 AM</p>
+</td>
+<td class="py-6 px-6">
+<span class="inline-flex items-center px-3 py-1 rounded-full bg-error/10 text-error text-[11px] font-bold tracking-wider uppercase">
+                                        Stock Out
+                                    </span>
+</td>
+<td class="py-6 px-6">
+<p class="text-sm font-bold text-on-surface">Brembo Front Brake Pads</p>
+<p class="text-[11px] text-on-surface-variant font-mono">BC-11029344</p>
+</td>
+<td class="py-6 px-6">
+<p class="text-sm font-bold text-error">- 5</p>
+</td>
+<td class="py-6 px-8 text-sm text-on-surface-variant">
+                                    Counter Sales - Order #9901
+                                </td>
+</tr>
+<!-- Row 3 -->
+<tr class="hover:bg-white/5 transition-all duration-300">
+<td class="py-6 px-8">
+<p class="text-sm font-medium text-on-surface">Oct 23, 2023</p>
+<p class="text-xs text-on-surface-variant/70">16:45 PM</p>
+</td>
+<td class="py-6 px-6">
+<span class="inline-flex items-center px-3 py-1 rounded-full bg-error/10 text-error text-[11px] font-bold tracking-wider uppercase">
+                                        Stock Out
+                                    </span>
+</td>
+<td class="py-6 px-6">
+<p class="text-sm font-bold text-on-surface">NGK Iridium Spark Plug</p>
+<p class="text-[11px] text-on-surface-variant font-mono">BC-00234122</p>
+</td>
+<td class="py-6 px-6">
+<p class="text-sm font-bold text-error">- 12</p>
+</td>
+<td class="py-6 px-8 text-sm text-on-surface-variant">
+                                    Online Order Fulfillment
+                                </td>
+</tr>
+<!-- Row 4 -->
+<tr class="hover:bg-white/5 transition-all duration-300">
+<td class="py-6 px-8">
+<p class="text-sm font-medium text-on-surface">Oct 23, 2023</p>
+<p class="text-xs text-on-surface-variant/70">09:12 AM</p>
+</td>
+<td class="py-6 px-6">
+<span class="inline-flex items-center px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-400 text-[11px] font-bold tracking-wider uppercase">
+                                        Stock In
+                                    </span>
+</td>
+<td class="py-6 px-6">
+<p class="text-sm font-bold text-on-surface">Motul 7100 4T 10W40</p>
+<p class="text-[11px] text-on-surface-variant font-mono">BC-88210394</p>
+</td>
+<td class="py-6 px-6">
+<p class="text-sm font-bold text-emerald-400">+ 48</p>
+</td>
+<td class="py-6 px-8 text-sm text-on-surface-variant">
+                                    Monthly Stock Replenishment
+                                </td>
+</tr>
+</tbody>
+</table>
+</div>
+<!-- Pagination Footer -->
+<div class="px-8 py-6 flex items-center justify-between border-t border-outline-variant/10">
+<p class="text-sm text-on-surface-variant">Showing 1 to 10 of 2,492 entries</p>
+<div class="flex items-center gap-2">
+<button class="p-2 rounded-lg bg-white/5 text-on-surface-variant hover:text-on-surface disabled:opacity-30 disabled:cursor-not-allowed">
+<span class="material-symbols-outlined" data-icon="chevron_left">chevron_left</span>
+</button>
+<button class="px-4 py-2 rounded-lg bg-primary/20 text-primary font-semibold text-sm">1</button>
+<button class="px-4 py-2 rounded-lg hover:bg-white/5 text-on-surface-variant text-sm">2</button>
+<button class="px-4 py-2 rounded-lg hover:bg-white/5 text-on-surface-variant text-sm">3</button>
+<span class="text-on-surface-variant mx-1">...</span>
+<button class="px-4 py-2 rounded-lg hover:bg-white/5 text-on-surface-variant text-sm">250</button>
+<button class="p-2 rounded-lg bg-white/5 text-on-surface-variant hover:text-on-surface">
+<span class="material-symbols-outlined" data-icon="chevron_right">chevron_right</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Secondary View: Empty State Mockup -->
+<div class="mt-24 border-t border-outline-variant/10 pt-16">
+<p class="text-[10px] text-on-surface-variant uppercase tracking-[0.2em] mb-8 opacity-50">Component Preview: Empty State</p>
+<div class="glass-card rounded-2xl py-32 flex flex-col items-center justify-center text-center">
+<div class="relative mb-6">
+<div class="absolute inset-0 blur-3xl bg-primary/20 rounded-full"></div>
+<span class="material-symbols-outlined text-[80px] text-primary-fixed-dim relative" data-icon="warehouse">warehouse</span>
+</div>
+<h3 class="text-2xl font-bold text-on-surface mb-2">No records found</h3>
+<p class="text-on-surface-variant max-w-sm">We couldn't find any transactions for the selected filters. Try adjusting your date range or search query.</p>
+<button class="mt-8 text-primary font-semibold flex items-center gap-2 hover:gap-3 transition-all">
+                        Clear all filters
+                        <span class="material-symbols-outlined text-[18px]" data-icon="close">close</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Signature Texture Background Glows -->
+<div class="fixed bottom-0 right-0 w-[500px] h-[500px] bg-secondary-container/10 rounded-full blur-[120px] -z-10 pointer-events-none"></div>
+<div class="fixed top-20 left-40 w-[300px] h-[300px] bg-primary/5 rounded-full blur-[100px] -z-10 pointer-events-none"></div>
+</main>
+<!-- Contextual FAB (Suppressed on Details/Table focus as per logic, but optional here) -->
+</body></html>

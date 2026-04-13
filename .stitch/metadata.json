@@ -1,0 +1,52 @@
+{
+  "name": "projects/11387067639078753557",
+  "projectId": "11387067639078753557",
+  "title": "39-YanYon Inventory System",
+  "visibility": "PRIVATE",
+  "projectType": "PROJECT_DESIGN",
+  "origin": "STITCH",
+  "deviceType": "DESKTOP",
+  "designSystem": {
+    "name": "assets/11297936743324501011",
+    "displayName": "39-YanYon Design System / The Nocturnal Ethereal",
+    "theme": {
+      "colorMode": "DARK",
+      "headlineFont": "INTER",
+      "bodyFont": "INTER",
+      "roundness": "ROUND_EIGHT",
+      "customColor": "#6366f1",
+      "overridePrimaryColor": "#6366f1",
+      "overrideSecondaryColor": "#8b5cf6",
+      "overrideNeutralColor": "#0f0f14"
+    }
+  },
+  "screens": {
+    "dashboard": {
+      "id": "18710e94f1cc4954a18ec146d1240f13",
+      "sourceScreen": "projects/11387067639078753557/screens/18710e94f1cc4954a18ec146d1240f13",
+      "width": 2560,
+      "height": 1600
+    },
+    "scanner": {
+      "id": "db99790f5f0445aabd1c36713e11ce7b",
+      "sourceScreen": "projects/11387067639078753557/screens/db99790f5f0445aabd1c36713e11ce7b",
+      "width": 2560,
+      "height": 2276
+    },
+    "products": {
+      "id": "2d21aa5217be491ab28017929ab89301",
+      "sourceScreen": "projects/11387067639078753557/screens/2d21aa5217be491ab28017929ab89301",
+      "width": 2560,
+      "height": 1800
+    },
+    "history": {
+      "id": "ccee0eafaab94b0f836af39d0a4f0b1f",
+      "sourceScreen": "projects/11387067639078753557/screens/ccee0eafaab94b0f836af39d0a4f0b1f",
+      "width": 2560,
+      "height": 1600
+    }
+  },
+  "metadata": {
+    "userRole": "OWNER"
+  }
+}

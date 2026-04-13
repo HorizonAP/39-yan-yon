@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>39-YanYon | Scanner</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "primary": "#a3a6ff",
+                    "surface-container-lowest": "#000000",
+                    "secondary": "#ac8aff",
+                    "on-background": "#f8f5fd",
+                    "secondary-container": "#5516be",
+                    "error": "#ff6e84",
+                    "on-surface": "#f8f5fd",
+                    "outline": "#76747b",
+                    "surface": "#0e0e13",
+                    "error-dim": "#d73357",
+                    "surface-container": "#19191f",
+                    "surface-tint": "#a3a6ff",
+                    "on-tertiary-fixed-variant": "#6e1354",
+                    "primary-container": "#9396ff",
+                    "tertiary-fixed-dim": "#ef81c4",
+                    "on-primary-fixed-variant": "#0e009d",
+                    "on-error-container": "#ffb2b9",
+                    "primary-fixed-dim": "#8387ff",
+                    "on-secondary-container": "#d9c8ff",
+                    "surface-variant": "#25252c",
+                    "secondary-fixed": "#dac9ff",
+                    "secondary-fixed-dim": "#ceb9ff",
+                    "tertiary-dim": "#ef81c4",
+                    "tertiary": "#ffa5d9",
+                    "on-tertiary": "#701455",
+                    "on-tertiary-fixed": "#3b002b",
+                    "inverse-on-surface": "#55545a",
+                    "on-tertiary-container": "#63054a",
+                    "on-primary-fixed": "#000000",
+                    "surface-bright": "#2b2b33",
+                    "surface-dim": "#0e0e13",
+                    "surface-container-low": "#131318",
+                    "on-primary": "#0f00a4",
+                    "primary-dim": "#6063ee",
+                    "error-container": "#a70138",
+                    "on-secondary": "#280067",
+                    "surface-container-highest": "#25252c",
+                    "outline-variant": "#48474d",
+                    "inverse-surface": "#fbf8ff",
+                    "secondary-dim": "#8455ef",
+                    "tertiary-fixed": "#ff8ed2",
+                    "on-secondary-fixed": "#40009b",
+                    "on-primary-container": "#0a0081",
+                    "background": "#0e0e13",
+                    "on-surface-variant": "#acaab1",
+                    "tertiary-container": "#ff8ed2",
+                    "surface-container-high": "#1f1f26",
+                    "on-error": "#490013",
+                    "on-secondary-fixed-variant": "#5f28c8",
+                    "inverse-primary": "#494bd7",
+                    "primary-fixed": "#9396ff"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.125rem",
+                    "lg": "0.25rem",
+                    "xl": "0.5rem",
+                    "full": "0.75rem"
+            },
+            "fontFamily": {
+                    "headline": ["Inter"],
+                    "body": ["Inter"],
+                    "label": ["Inter"]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        body {
+            background-color: #0e0e13;
+            color: #f8f5fd;
+            font-family: 'Inter', sans-serif;
+            overflow-x: hidden;
+        }
+        .glass-card {
+            background: rgba(26, 26, 46, 0.4);
+            backdrop-filter: blur(24px);
+            border: 1px solid rgba(45, 47, 74, 0.5);
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .glow-bg {
+            position: fixed;
+            width: 600px;
+            height: 600px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(85, 22, 190, 0.15) 0%, rgba(14, 14, 19, 0) 70%);
+            z-index: -1;
+            top: -200px;
+            right: -200px;
+        }
+    </style>
+</head>
+<body class="dark bg-surface text-on-surface selection:bg-primary-dim selection:text-on-primary">
+<div class="glow-bg"></div>
+<!-- SideNavBar Shell -->
+<aside class="h-screen w-64 fixed left-0 top-0 flex flex-col py-8 bg-[#0e0e13] border-r border-[#48474d]/20 z-50">
+<div class="px-6 mb-10">
+<h1 class="text-xl font-bold text-[#f8f5fd] tracking-tight">39-YanYon</h1>
+<p class="font-['Inter'] uppercase tracking-wider text-[10px] text-[#acaab1] mt-1">Motor Parts Admin</p>
+</div>
+<nav class="flex-1 px-4 space-y-2">
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-[#acaab1] hover:text-[#f8f5fd] hover:bg-[#131318] transition-colors font-['Inter'] uppercase tracking-wider text-[10px]" href="#">
+<span class="material-symbols-outlined text-lg" data-icon="dashboard">dashboard</span>
+                Dashboard
+            </a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-[#acaab1] hover:text-[#f8f5fd] hover:bg-[#131318] transition-colors font-['Inter'] uppercase tracking-wider text-[10px]" href="#">
+<span class="material-symbols-outlined text-lg" data-icon="inventory_2">inventory_2</span>
+                Inventory
+            </a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-[#a3a6ff] border-r-2 border-[#a3a6ff] bg-gradient-to-r from-[#6063ee]/10 to-transparent font-['Inter'] uppercase tracking-wider text-[10px]" href="#">
+<span class="material-symbols-outlined text-lg" data-icon="barcode_reader">barcode_reader</span>
+                Scanner
+            </a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-[#acaab1] hover:text-[#f8f5fd] hover:bg-[#131318] transition-colors font-['Inter'] uppercase tracking-wider text-[10px]" href="#">
+<span class="material-symbols-outlined text-lg" data-icon="shopping_cart">shopping_cart</span>
+                Orders
+            </a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-[#acaab1] hover:text-[#f8f5fd] hover:bg-[#131318] transition-colors font-['Inter'] uppercase tracking-wider text-[10px]" href="#">
+<span class="material-symbols-outlined text-lg" data-icon="settings">settings</span>
+                Settings
+            </a>
+</nav>
+<div class="px-4 mt-auto pt-6 border-t border-[#48474d]/10">
+<button class="w-full mb-6 py-3 px-4 bg-gradient-to-br from-primary-dim to-primary text-on-primary font-semibold rounded-lg scale-95 active:scale-100 transition-transform flex items-center justify-center gap-2">
+<span class="material-symbols-outlined" data-icon="bolt">bolt</span>
+                Quick Audit
+            </button>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-[#acaab1] hover:text-[#f8f5fd] hover:bg-[#131318] transition-colors font-['Inter'] uppercase tracking-wider text-[10px]" href="#">
+<span class="material-symbols-outlined text-lg" data-icon="help">help</span>
+                Support
+            </a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-[#acaab1] hover:text-[#f8f5fd] hover:bg-[#131318] transition-colors font-['Inter'] uppercase tracking-wider text-[10px]" href="#">
+<span class="material-symbols-outlined text-lg" data-icon="logout">logout</span>
+                Logout
+            </a>
+</div>
+</aside>
+<!-- Main Content Canvas -->
+<main class="ml-64 min-h-screen">
+<!-- TopAppBar -->
+<header class="w-full top-0 sticky z-40 bg-[#131318] flex justify-between items-center px-8 py-4">
+<div class="flex items-center gap-4">
+<div class="bg-surface-container-lowest border border-outline-variant/20 rounded-xl px-4 py-2 flex items-center gap-3 w-96">
+<span class="material-symbols-outlined text-on-surface-variant" data-icon="search">search</span>
+<input class="bg-transparent border-none focus:ring-0 text-sm text-on-surface w-full" placeholder="Global SKU search..." type="text"/>
+</div>
+</div>
+<div class="flex items-center gap-6">
+<span class="material-symbols-outlined text-[#acaab1] hover:text-[#a3a6ff] cursor-pointer transition-colors" data-icon="notifications">notifications</span>
+<span class="material-symbols-outlined text-[#acaab1] hover:text-[#a3a6ff] cursor-pointer transition-colors" data-icon="qr_code_scanner">qr_code_scanner</span>
+<div class="w-10 h-10 rounded-full overflow-hidden border-2 border-primary-dim/30">
+<img alt="User profile" class="w-full h-full object-cover" data-alt="close-up portrait of a professional operations manager in a dimly lit high-tech environment with indigo backlighting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBlP02ickYhX26a9Ljj7MDMvyYUs3Q1QteiiPN3cmD9q4lZFh9qfZv1RFAkrIY08Q6qENu_zlFuLZBM2rNu0JbS0UgD1MI315u8XVZ_dShVF9u6ZRbeKLtxUGWfU-_eHQ-Iu8gojwMURGm6yJGeM4JJwwu59Ryi_E5OJn1i-_94xP5mf5DAONs6f4oOnvA_zQfmOt3BC-c23lFkgxie_66A6bj9tImZVgSGr4wTl0vm9MgHjp7KrWevMXmVEixrkHduLudiPstEJWC9"/>
+</div>
+</div>
+</header>
+<section class="p-10 flex gap-10">
+<!-- Left: Main Scanner Area -->
+<div class="flex-1 space-y-8">
+<div>
+<h2 class="text-4xl font-bold tracking-tight mb-2">Inventory <span class="text-primary">Scanner</span></h2>
+<p class="text-on-surface-variant max-w-lg">Process incoming stock or fulfill orders by scanning the unique part identifier.</p>
+</div>
+<!-- Large Barcode Input -->
+<div class="glass-card p-8 rounded-2xl relative overflow-hidden group">
+<div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+<span class="material-symbols-outlined text-9xl" data-icon="barcode">barcode</span>
+</div>
+<label class="block text-[10px] uppercase tracking-[0.15em] text-primary mb-4 font-bold">Ready to Scan</label>
+<div class="flex items-center gap-4 bg-surface-container-lowest/50 border border-outline-variant/30 rounded-xl p-6 focus-within:border-primary/50 transition-all">
+<span class="material-symbols-outlined text-4xl text-primary" data-icon="barcode_scanner">barcode_scanner</span>
+<input autofocus="" class="bg-transparent border-none focus:ring-0 text-3xl font-mono tracking-widest text-on-surface w-full placeholder:text-outline/30" placeholder="Scan or enter Barcode ID..." type="text" value="SKU-8829-YAMA"/>
+</div>
+</div>
+<!-- Product Lookup Result -->
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+<div class="glass-card p-6 rounded-2xl flex gap-6 items-center">
+<div class="w-24 h-24 rounded-xl overflow-hidden bg-surface-container-low flex-shrink-0">
+<img alt="Motorcycle Brake Pad" class="w-full h-full object-cover" data-alt="close-up of a high-performance motorcycle carbon ceramic brake pad on a dark technical background with indigo highlights" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCLBugYYrfg7Wc_H-gG5GuUrEXNUyBj4-NK6f5WAikYJyvDMwPUYrimjSYmIuC5dFbkTHlOV86Iqdrd9Ui71BO0KjZTFVxfnyQQFwuqAG2dovq1q7v6wx-9bU6Zn3ybEGEHiDceXlWQ179Ub6j_0HbRnV5tylLudi60lgEkB7FVjTAxsn8HUVVxc1OWIcSxNqaF3nxG0aErca87mffajw84su2ji4Ju6sATLyX7oY-vQyHTcAT6bU1Vq25R14eeDC30R4Bdi3QgBwcJ"/>
+</div>
+<div>
+<p class="text-[10px] uppercase tracking-wider text-on-surface-variant font-bold mb-1">Product Identity</p>
+<h3 class="text-xl font-bold text-on-surface mb-1">Yamaha R1 Brake Pads</h3>
+<p class="text-primary font-mono text-sm">SKU-8829-YAMA</p>
+</div>
+</div>
+<div class="glass-card p-6 rounded-2xl border-l-4 border-secondary">
+<p class="text-[10px] uppercase tracking-wider text-on-surface-variant font-bold mb-1">Current Availability</p>
+<div class="flex items-baseline gap-2">
+<span class="text-4xl font-extrabold text-on-surface">142</span>
+<span class="text-on-surface-variant text-sm">Units in Warehouse A</span>
+</div>
+<div class="mt-4 h-1 w-full bg-surface-container rounded-full overflow-hidden">
+<div class="h-full bg-secondary w-2/3 shadow-[0_0_10px_rgba(172,138,255,0.4)]"></div>
+</div>
+</div>
+</div>
+<!-- Transaction Form -->
+<div class="glass-card p-8 rounded-2xl space-y-8">
+<div class="flex gap-4">
+<button class="flex-1 py-4 rounded-xl flex items-center justify-center gap-3 bg-secondary-container/20 border border-secondary/30 text-on-secondary-container hover:bg-secondary-container/40 transition-all font-semibold">
+<span class="material-symbols-outlined" data-icon="add_circle">add_circle</span>
+                            STOCK IN
+                        </button>
+<button class="flex-1 py-4 rounded-xl flex items-center justify-center gap-3 bg-surface-container/50 border border-outline-variant/20 text-on-surface-variant hover:text-on-surface hover:bg-surface-container transition-all font-semibold opacity-50">
+<span class="material-symbols-outlined" data-icon="remove_circle">remove_circle</span>
+                            STOCK OUT
+                        </button>
+</div>
+<div class="grid grid-cols-3 gap-6">
+<div class="col-span-1">
+<label class="block text-[10px] uppercase tracking-wider text-on-surface-variant font-bold mb-2">Quantity</label>
+<input class="w-full bg-surface-container-lowest border border-outline-variant/30 rounded-xl px-5 py-4 text-xl font-bold focus:ring-primary focus:border-primary transition-all" type="number" value="12"/>
+</div>
+<div class="col-span-2">
+<label class="block text-[10px] uppercase tracking-wider text-on-surface-variant font-bold mb-2">Transaction Reason / Notes</label>
+<input class="w-full bg-surface-container-lowest border border-outline-variant/30 rounded-xl px-5 py-4 focus:ring-primary focus:border-primary transition-all" placeholder="e.g. Monthly Restock, Returns..." type="text"/>
+</div>
+</div>
+<button class="w-full py-5 rounded-xl bg-gradient-to-r from-primary-dim to-primary text-on-primary font-bold text-lg shadow-[0_8px_30px_rgba(96,99,238,0.2)] hover:shadow-[0_8px_40px_rgba(96,99,238,0.4)] hover:-translate-y-0.5 transition-all active:translate-y-0 flex items-center justify-center gap-3">
+<span class="material-symbols-outlined" data-icon="check_circle">check_circle</span>
+                        Submit Transaction
+                    </button>
+</div>
+</div>
+<!-- Right: Recent Scan History Sidebar -->
+<div class="w-96 space-y-6">
+<div class="flex items-center justify-between">
+<h3 class="text-lg font-bold tracking-tight">Scan History</h3>
+<button class="text-[10px] uppercase tracking-widest text-primary font-bold hover:underline transition-all">Clear All</button>
+</div>
+<div class="space-y-4">
+<!-- History Item 1 -->
+<div class="glass-card p-4 rounded-xl border-l-2 border-primary group hover:bg-[#1a1a2e]/60 transition-all cursor-pointer">
+<div class="flex justify-between items-start mb-2">
+<div class="bg-primary/10 text-primary px-2 py-1 rounded text-[10px] font-bold">STOCK IN</div>
+<span class="text-[10px] text-on-surface-variant">2 mins ago</span>
+</div>
+<h4 class="font-bold text-sm group-hover:text-primary transition-colors">Exhaust Manifold Gasket</h4>
+<div class="flex justify-between items-center mt-2">
+<p class="text-xs text-on-surface-variant font-mono">SKU-990-EGK</p>
+<p class="text-sm font-bold text-on-surface">+25 Units</p>
+</div>
+</div>
+<!-- History Item 2 -->
+<div class="glass-card p-4 rounded-xl border-l-2 border-error group hover:bg-[#1a1a2e]/60 transition-all cursor-pointer">
+<div class="flex justify-between items-start mb-2">
+<div class="bg-error/10 text-error px-2 py-1 rounded text-[10px] font-bold">STOCK OUT</div>
+<span class="text-[10px] text-on-surface-variant">14 mins ago</span>
+</div>
+<h4 class="font-bold text-sm group-hover:text-error transition-colors">Chain Lube 400ml</h4>
+<div class="flex justify-between items-center mt-2">
+<p class="text-xs text-on-surface-variant font-mono">SKU-212-CLB</p>
+<p class="text-sm font-bold text-on-surface">-5 Units</p>
+</div>
+</div>
+<!-- History Item 3 -->
+<div class="glass-card p-4 rounded-xl border-l-2 border-primary group hover:bg-[#1a1a2e]/60 transition-all cursor-pointer">
+<div class="flex justify-between items-start mb-2">
+<div class="bg-primary/10 text-primary px-2 py-1 rounded text-[10px] font-bold">STOCK IN</div>
+<span class="text-[10px] text-on-surface-variant">45 mins ago</span>
+</div>
+<h4 class="font-bold text-sm group-hover:text-primary transition-colors">H7 LED Headlight Bulb</h4>
+<div class="flex justify-between items-center mt-2">
+<p class="text-xs text-on-surface-variant font-mono">SKU-772-LHB</p>
+<p class="text-sm font-bold text-on-surface">+10 Units</p>
+</div>
+</div>
+<!-- History Item 4 -->
+<div class="glass-card p-4 rounded-xl border-l-2 border-primary group hover:bg-[#1a1a2e]/60 transition-all cursor-pointer">
+<div class="flex justify-between items-start mb-2">
+<div class="bg-primary/10 text-primary px-2 py-1 rounded text-[10px] font-bold">STOCK IN</div>
+<span class="text-[10px] text-on-surface-variant">1 hour ago</span>
+</div>
+<h4 class="font-bold text-sm group-hover:text-primary transition-colors">NGK Spark Plug IR</h4>
+<div class="flex justify-between items-center mt-2">
+<p class="text-xs text-on-surface-variant font-mono">SKU-001-NGK</p>
+<p class="text-sm font-bold text-on-surface">+100 Units</p>
+</div>
+</div>
+</div>
+<!-- Floating System Alert (Decorative) -->
+<div class="mt-10 p-6 rounded-2xl bg-gradient-to-br from-secondary-container/20 to-transparent border border-outline-variant/20">
+<span class="material-symbols-outlined text-secondary mb-3" data-icon="cloud_done">cloud_done</span>
+<h5 class="text-sm font-bold mb-1">Local Sync Active</h5>
+<p class="text-[11px] text-on-surface-variant leading-relaxed">Transactions are being synchronized with the main database in real-time. Last sync: Just now.</p>
+</div>
+</div>
+</section>
+</main>
+</body></html>
