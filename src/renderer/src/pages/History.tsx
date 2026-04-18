@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { api } from '../lib/api'
+import { api, type StockHistoryEntry } from '../lib/api'
 import { Input } from '../components/ui/input'
 import { Download, Search, Archive } from 'lucide-react'
 import { format } from 'date-fns'
@@ -51,7 +51,7 @@ export default function HistoryPage() {
     queryFn: () => api.getStockHistory(500)
   })
 
-  const filtered = (history ?? []).filter((r: any) =>
+  const filtered = (history ?? []).filter((r: StockHistoryEntry) =>
     !search ||
     r.product_name?.toLowerCase().includes(search.toLowerCase()) ||
     r.product_barcode?.toLowerCase().includes(search.toLowerCase()) ||
@@ -62,8 +62,8 @@ export default function HistoryPage() {
     if (!filtered.length) return
     const csv = [
       ['Date', 'Type', 'Product', 'Barcode', 'Change', 'Reason'].join(','),
-      ...filtered.map((r: any) => [
-        format(new Date(r.created_at + 'Z'), 'yyyy-MM-dd HH:mm'),
+      ...filtered.map((r: StockHistoryEntry) => [
+        format(new Date(r.created_at), 'yyyy-MM-dd HH:mm'),
         r.type,
         `"${r.product_name}"`,
         r.product_barcode,
@@ -132,11 +132,11 @@ export default function HistoryPage() {
             ) : filtered.length === 0 ? (
               <EmptyState search={search} />
             ) : (
-              filtered.map((r: any) => (
+              filtered.map((r: StockHistoryEntry) => (
                 <tr key={r.id} className="border-b border-[rgba(72,71,77,0.18)] last:border-0 hover:bg-[rgba(163,166,255,0.04)] transition-colors">
                   <td className="px-5 py-3.5 text-xs text-[#acaab1] whitespace-nowrap">
-                    <div>{format(new Date(r.created_at + 'Z'), 'dd MMM yyyy')}</div>
-                    <div className="text-[#76747b] mt-0.5">{format(new Date(r.created_at + 'Z'), 'HH:mm')}</div>
+                    <div>{format(new Date(r.created_at), 'dd MMM yyyy')}</div>
+                    <div className="text-[#76747b] mt-0.5">{format(new Date(r.created_at), 'HH:mm')}</div>
                   </td>
                   <td className="px-5 py-3.5"><TypeBadge type={r.type} /></td>
                   <td className="px-5 py-3.5">

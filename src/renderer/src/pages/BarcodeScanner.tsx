@@ -255,7 +255,7 @@ export default function BarcodeScanner() {
           </div>
           <div>
             <p className="text-sm font-semibold text-[#f8f5fd]">Local Sync Active</p>
-            <p className="text-[11px] text-[#acaab1] mt-0.5">Transactions are being saved to the local database in real-time.</p>
+            <p className="text-[11px] text-[#acaab1] mt-0.5">Transactions are being written to PostgreSQL in real-time from this desktop app.</p>
           </div>
         </div>
       </div>

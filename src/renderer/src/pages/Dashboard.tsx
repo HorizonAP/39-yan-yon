@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
-import { api } from '../lib/api'
+import { api, type LowStockProduct, type StockHistoryEntry } from '../lib/api'
 import { Package, TrendingUp, TrendingDown, AlertTriangle, ArrowUpRight } from 'lucide-react'
 
 import { format } from 'date-fns'
@@ -123,10 +123,10 @@ export default function Dashboard() {
                 ) : (recentHistory ?? []).length === 0 ? (
                   <tr><td colSpan={5} className="py-8 text-center text-[#acaab1] text-sm">No recent activity</td></tr>
                 ) : (
-                  (recentHistory as any[]).map((r) => (
+                  (recentHistory as StockHistoryEntry[]).map((r) => (
                     <tr key={r.id} className="border-b border-[rgba(72,71,77,0.15)] last:border-0 hover:bg-[rgba(163,166,255,0.04)] transition-colors">
                       <td className="py-3 pr-4 text-xs text-[#acaab1] whitespace-nowrap">
-                        {format(new Date(r.created_at + 'Z'), 'MMM d, HH:mm')}
+                        {format(new Date(r.created_at), 'MMM d, HH:mm')}
                       </td>
                       <td className="py-3 pr-4"><TypeBadge type={r.type} /></td>
                       <td className="py-3 pr-4 font-medium text-[#f8f5fd] max-w-[160px] truncate">{r.product_name}</td>
@@ -155,7 +155,7 @@ export default function Dashboard() {
             ) : (lowStock ?? []).length === 0 ? (
               <p className="text-sm text-center text-[#10b981] py-6">All stocks healthy 🎉</p>
             ) : (
-              (lowStock as any[]).map((item) => (
+              (lowStock as LowStockProduct[]).map((item) => (
                 <div key={item.id} className="rounded-lg border border-[rgba(72,71,77,0.30)] bg-[rgba(19,19,24,0.60)] p-3 flex items-center gap-3">
                   {/* Left accent */}
                   <div className={`w-1 self-stretch rounded-full flex-shrink-0 ${item.quantity === 0 ? 'bg-[#ff6e84]' : 'bg-[#f59e0b]'}`} />

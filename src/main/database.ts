@@ -1,163 +1,280 @@
-import Database, { Database as DBType } from 'better-sqlite3'
-import { app } from 'electron'
-import path from 'path'
-import fs from 'fs'
+import { and, desc, eq, gte, lte, sql } from 'drizzle-orm'
 
-let db: DBType
+import { db } from './db'
+import { categories, products, stockHistory } from './schema'
 
-export interface ProductInput {
+export interface InventoryProduct {
+  id: number
   barcode: string
   name: string
-  brand?: string
+  brand: string | null
+  category_id: number | null
+  category_name: string | null
   cost_price: number
   sell_price: number
   quantity: number
   min_stock: number
-  location?: string
+  location: string | null
+  created_at: string
+  updated_at: string
 }
 
-export function initDatabase() {
-  const userDataPath = app.getPath('userData')
-  const dbPath = path.join(userDataPath, 'yanyon.db')
-  
-  if (!fs.existsSync(userDataPath)) {
-    fs.mkdirSync(userDataPath, { recursive: true })
-  }
-
-  db = new Database(dbPath)
-  db.pragma('journal_mode = WAL')
-
-  db.exec(`
-    CREATE TABLE IF NOT EXISTS products (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      barcode TEXT UNIQUE NOT NULL,
-      name TEXT NOT NULL,
-      brand TEXT,
-      cost_price REAL DEFAULT 0,
-      sell_price REAL DEFAULT 0,
-      quantity INTEGER DEFAULT 0,
-      min_stock INTEGER DEFAULT 5,
-      location TEXT,
-      created_at TEXT DEFAULT CURRENT_TIMESTAMP,
-      updated_at TEXT DEFAULT CURRENT_TIMESTAMP
-    );
-
-    CREATE TABLE IF NOT EXISTS stock_history (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      product_id INTEGER,
-      type TEXT CHECK(type IN ('stock_in','stock_out')),
-      change_qty INTEGER NOT NULL,
-      reason TEXT,
-      created_at TEXT DEFAULT CURRENT_TIMESTAMP,
-      FOREIGN KEY(product_id) REFERENCES products(id)
-    );
-  `)
-  
-  // Seed data if empty
-  const count = db.prepare('SELECT COUNT(*) as count FROM products').get() as { count: number }
-  if (count.count === 0) {
-    console.log("Seeding initial data...")
-    const stmt = db.prepare(`
-      INSERT INTO products (barcode, name, brand, cost_price, sell_price, quantity, min_stock, location)
-      VALUES 
-      ('1234567890123', 'Motul 3000 Plus 10W40', 'Motul', 150, 200, 2, 5, 'Shelf A1'),
-      ('1234567890124', 'NGK Spark Plug CPR6EA-9', 'NGK', 80, 120, 15, 10, 'Shelf A2'),
-      ('1234567890125', 'IRC Tire 70/90-17', 'IRC', 350, 450, 0, 4, 'Floor B1'),
-      ('1234567890126', 'Honda Brake Pad Front', 'Honda', 120, 180, 8, 5, 'Shelf C1'),
-      ('1234567890127', 'Yamaha V-Belt', 'Yamaha', 250, 350, 3, 5, 'Shelf C2')
-    `)
-    stmt.run()
-  }
+export interface LowStockProduct {
+  id: number
+  barcode: string
+  name: string
+  brand: string | null
+  category_name: string | null
+  quantity: number
+  min_stock: number
+  location: string | null
 }
 
-export function getDb(): DBType {
-  if (!db) throw new Error("Database not initialized")
-  return db
+export interface StockHistoryEntry {
+  id: number
+  product_id: number
+  product_name: string
+  product_barcode: string
+  type: 'stock_in' | 'stock_out'
+  change_qty: number
+  reason: string | null
+  created_at: string
+}
+
+export interface DashboardStats {
+  totalProducts: number
+  totalStockValue: number
+  lowStockCount: number
+  todayTransactions: number
+}
+
+function toIsoString(value: Date | string) {
+  return value instanceof Date ? value.toISOString() : new Date(value).toISOString()
+}
+
+function mapProduct(row: {
+  id: number
+  barcode: string
+  name: string
+  brand: string | null
+  categoryId: number | null
+  categoryName: string | null
+  costPrice: string
+  sellPrice: string
+  quantity: number
+  minStock: number
+  location: string | null
+  createdAt: Date | string
+  updatedAt: Date | string
+}): InventoryProduct {
+  return {
+    id: row.id,
+    barcode: row.barcode,
+    name: row.name,
+    brand: row.brand,
+    category_id: row.categoryId,
+    category_name: row.categoryName,
+    cost_price: Number(row.costPrice),
+    sell_price: Number(row.sellPrice),
+    quantity: row.quantity,
+    min_stock: row.minStock,
+    location: row.location,
+    created_at: toIsoString(row.createdAt),
+    updated_at: toIsoString(row.updatedAt),
+  }
 }
 
 export const dbOperations = {
-  getProducts: () => {
-    return getDb().prepare('SELECT * FROM products ORDER BY name').all()
+  async getProducts(): Promise<InventoryProduct[]> {
+    const rows = await db
+      .select({
+        id: products.id,
+        barcode: products.barcode,
+        name: products.name,
+        brand: products.brand,
+        categoryId: products.categoryId,
+        categoryName: categories.name,
+        costPrice: products.costPrice,
+        sellPrice: products.sellPrice,
+        quantity: products.quantity,
+        minStock: products.minStock,
+        location: products.location,
+        createdAt: products.createdAt,
+        updatedAt: products.updatedAt,
+      })
+      .from(products)
+      .leftJoin(categories, eq(products.categoryId, categories.id))
+      .orderBy(products.name)
+
+    return rows.map(mapProduct)
   },
-  
-  getProductByBarcode: (barcode: string) => {
-    return getDb().prepare('SELECT * FROM products WHERE barcode = ?').get(barcode)
+
+  async getProductByBarcode(barcode: string): Promise<InventoryProduct | null> {
+    const [row] = await db
+      .select({
+        id: products.id,
+        barcode: products.barcode,
+        name: products.name,
+        brand: products.brand,
+        categoryId: products.categoryId,
+        categoryName: categories.name,
+        costPrice: products.costPrice,
+        sellPrice: products.sellPrice,
+        quantity: products.quantity,
+        minStock: products.minStock,
+        location: products.location,
+        createdAt: products.createdAt,
+        updatedAt: products.updatedAt,
+      })
+      .from(products)
+      .leftJoin(categories, eq(products.categoryId, categories.id))
+      .where(eq(products.barcode, barcode))
+      .limit(1)
+
+    return row ? mapProduct(row) : null
   },
-  
-  addProduct: (product: ProductInput) => {
-    const stmt = getDb().prepare(`
-      INSERT INTO products (barcode, name, brand, cost_price, sell_price, quantity, min_stock, location)
-      VALUES (@barcode, @name, @brand, @cost_price, @sell_price, @quantity, @min_stock, @location)
-    `)
-    return stmt.run(product)
-  },
-  
-  updateProduct: (id: number, product: Partial<ProductInput>) => {
-    const fields = Object.keys(product)
-      .filter(k => product[k as keyof ProductInput] !== undefined)
-      .map(k => `${k} = @${k}`)
-      .join(', ')
-      
-    if (!fields) return null
-    
-    const stmt = getDb().prepare(`
-      UPDATE products SET ${fields}, updated_at = CURRENT_TIMESTAMP WHERE id = @id
-    `)
-    return stmt.run({ ...product, id })
-  },
-  
-  stockIn: (productId: number, qty: number, reason?: string) => {
-    const db = getDb()
-    const transaction = db.transaction(() => {
-      db.prepare('UPDATE products SET quantity = quantity + ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?').run(qty, productId)
-      db.prepare('INSERT INTO stock_history (product_id, type, change_qty, reason) VALUES (?, ?, ?, ?)')
-        .run(productId, 'stock_in', qty, reason || null)
-    })
-    transaction()
-    return true
-  },
-  
-  stockOut: (productId: number, qty: number, reason?: string) => {
-    const db = getDb()
-    const transaction = db.transaction(() => {
-      // Allow negative stock or not? Let's just deduct it. Or throw if not enough.
-      const product = db.prepare('SELECT quantity FROM products WHERE id = ?').get(productId) as any
-      if (!product || product.quantity < qty) throw new Error("Insufficient stock")
-      
-      db.prepare('UPDATE products SET quantity = quantity - ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?').run(qty, productId)
-      db.prepare('INSERT INTO stock_history (product_id, type, change_qty, reason) VALUES (?, ?, ?, ?)')
-        .run(productId, 'stock_out', qty, reason || null)
-    })
-    transaction()
-    return true
-  },
-  
-  getLowStockProducts: () => {
-    return getDb().prepare('SELECT * FROM products WHERE quantity <= min_stock ORDER BY quantity ASC').all()
-  },
-  
-  getStockHistory: (limit = 100) => {
-    return getDb().prepare(`
-      SELECT h.*, p.name as product_name, p.barcode as product_barcode
-      FROM stock_history h
-      JOIN products p ON h.product_id = p.id
-      ORDER BY h.created_at DESC
-      LIMIT ?
-    `).all(limit)
-  },
-  
-  getDashboardStats: () => {
-    const db = getDb()
-    const totalProducts = db.prepare('SELECT COUNT(*) as count FROM products').get() as any
-    const totalStockValue = db.prepare('SELECT SUM(quantity * cost_price) as value FROM products').get() as any
-    const lowStockCount = db.prepare('SELECT COUNT(*) as count FROM products WHERE quantity <= min_stock').get() as any
-    const todayTransactions = db.prepare(`SELECT COUNT(*) as count FROM stock_history WHERE date(created_at) = date('now')`).get() as any
-    
-    return {
-      totalProducts: totalProducts.count,
-      totalStockValue: totalStockValue.value || 0,
-      lowStockCount: lowStockCount.count,
-      todayTransactions: todayTransactions.count
+
+  async stockIn(productId: number, qty: number, reason?: string) {
+    if (qty <= 0) {
+      throw new Error('qty must be greater than 0')
     }
-  }
+
+    return db.transaction(async (tx) => {
+      const [updated] = await tx
+        .update(products)
+        .set({
+          quantity: sql`${products.quantity} + ${qty}`,
+          updatedAt: new Date(),
+        })
+        .where(eq(products.id, productId))
+        .returning({ id: products.id, quantity: products.quantity })
+
+      if (!updated) {
+        throw new Error('PRODUCT_NOT_FOUND')
+      }
+
+      await tx.insert(stockHistory).values({
+        productId,
+        type: 'stock_in',
+        changeQty: qty,
+        reason: reason?.trim() || null,
+      })
+
+      return updated
+    })
+  },
+
+  async stockOut(productId: number, qty: number, reason?: string) {
+    if (qty <= 0) {
+      throw new Error('qty must be greater than 0')
+    }
+
+    return db.transaction(async (tx) => {
+      const [current] = await tx
+        .select({ quantity: products.quantity })
+        .from(products)
+        .where(eq(products.id, productId))
+        .limit(1)
+
+      if (!current) {
+        throw new Error('PRODUCT_NOT_FOUND')
+      }
+
+      if (current.quantity < qty) {
+        throw new Error('INSUFFICIENT_STOCK')
+      }
+
+      const [updated] = await tx
+        .update(products)
+        .set({
+          quantity: sql`${products.quantity} - ${qty}`,
+          updatedAt: new Date(),
+        })
+        .where(eq(products.id, productId))
+        .returning({ id: products.id, quantity: products.quantity })
+
+      await tx.insert(stockHistory).values({
+        productId,
+        type: 'stock_out',
+        changeQty: qty,
+        reason: reason?.trim() || null,
+      })
+
+      return updated
+    })
+  },
+
+  async getLowStockProducts(): Promise<LowStockProduct[]> {
+    return db
+      .select({
+        id: products.id,
+        barcode: products.barcode,
+        name: products.name,
+        brand: products.brand,
+        category_name: categories.name,
+        quantity: products.quantity,
+        min_stock: products.minStock,
+        location: products.location,
+      })
+      .from(products)
+      .leftJoin(categories, eq(products.categoryId, categories.id))
+      .where(lte(products.quantity, products.minStock))
+      .orderBy(products.quantity, products.name)
+  },
+
+  async getStockHistory(limit = 100): Promise<StockHistoryEntry[]> {
+    const safeLimit = Math.min(Math.max(limit, 1), 1000)
+    const rows = await db
+      .select({
+        id: stockHistory.id,
+        product_id: stockHistory.productId,
+        product_name: products.name,
+        product_barcode: products.barcode,
+        type: stockHistory.type,
+        change_qty: stockHistory.changeQty,
+        reason: stockHistory.reason,
+        created_at: stockHistory.createdAt,
+      })
+      .from(stockHistory)
+      .innerJoin(products, eq(stockHistory.productId, products.id))
+      .orderBy(desc(stockHistory.createdAt))
+      .limit(safeLimit)
+
+    return rows.map((row) => ({
+      ...row,
+      created_at: toIsoString(row.created_at),
+    }))
+  },
+
+  async getDashboardStats(): Promise<DashboardStats> {
+    const [totalProducts] = await db
+      .select({ count: sql<number>`count(*)::int` })
+      .from(products)
+
+    const [totalStockValue] = await db
+      .select({ value: sql<number>`coalesce(sum(quantity * cost_price::numeric), 0)` })
+      .from(products)
+
+    const [lowStockCount] = await db
+      .select({ count: sql<number>`count(*)::int` })
+      .from(products)
+      .where(lte(products.quantity, products.minStock))
+
+    const [todayTransactions] = await db
+      .select({ count: sql<number>`count(*)::int` })
+      .from(stockHistory)
+      .where(
+        and(
+          gte(stockHistory.createdAt, sql`current_date::timestamptz`),
+          lte(stockHistory.createdAt, sql`(current_date + interval '1 day')::timestamptz`),
+        ),
+      )
+
+    return {
+      totalProducts: totalProducts?.count ?? 0,
+      totalStockValue: Number(totalStockValue?.value ?? 0),
+      lowStockCount: lowStockCount?.count ?? 0,
+      todayTransactions: todayTransactions?.count ?? 0,
+    }
+  },
 }

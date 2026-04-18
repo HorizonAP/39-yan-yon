@@ -2,6 +2,9 @@ import { app, shell, BrowserWindow, ipcMain } from 'electron'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 
+import { closeDatabase, initDatabase } from './db'
+import { dbOperations } from './database'
+
 function createWindow(): void {
   const icon = join(__dirname, '../../resources/icon.png')
   const mainWindow = new BrowserWindow({
@@ -32,14 +35,27 @@ function createWindow(): void {
   }
 }
 
-app.whenReady().then(() => {
+function registerInventoryHandlers() {
+  ipcMain.handle('inventory:getProducts', () => dbOperations.getProducts())
+  ipcMain.handle('inventory:getProductByBarcode', (_event, barcode: string) => dbOperations.getProductByBarcode(barcode))
+  ipcMain.handle('inventory:stockIn', (_event, productId: number, qty: number, reason?: string) => dbOperations.stockIn(productId, qty, reason))
+  ipcMain.handle('inventory:stockOut', (_event, productId: number, qty: number, reason?: string) => dbOperations.stockOut(productId, qty, reason))
+  ipcMain.handle('inventory:getLowStockProducts', () => dbOperations.getLowStockProducts())
+  ipcMain.handle('inventory:getStockHistory', (_event, limit?: number) => dbOperations.getStockHistory(limit))
+  ipcMain.handle('inventory:getDashboardStats', () => dbOperations.getDashboardStats())
+}
+
+app.whenReady().then(async () => {
   electronApp.setAppUserModelId('com.electron')
+
+  await initDatabase()
 
   app.on('browser-window-created', (_, window) => {
     optimizer.watchWindowShortcuts(window)
   })
 
   ipcMain.on('ping', () => console.log('pong'))
+  registerInventoryHandlers()
 
   createWindow()
 
@@ -50,6 +66,7 @@ app.whenReady().then(() => {
 
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') {
+    void closeDatabase()
     app.quit()
   }
 })

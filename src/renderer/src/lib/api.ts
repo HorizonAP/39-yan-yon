@@ -1,31 +1,68 @@
-// HTTP API client — calls 39-yan-yon-api over the network
-const BASE_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:3000'
-const API_KEY  = import.meta.env.VITE_API_KEY  ?? ''
+export interface Product {
+  id: number
+  barcode: string
+  name: string
+  brand: string | null
+  category_id: number | null
+  category_name: string | null
+  cost_price: number
+  sell_price: number
+  quantity: number
+  min_stock: number
+  location: string | null
+  created_at: string
+  updated_at: string
+}
 
-async function req<T>(path: string, init?: RequestInit): Promise<T> {
-  const res = await fetch(`${BASE_URL}${path}`, {
-    ...init,
-    headers: {
-      'Content-Type': 'application/json',
-      'X-API-Key':    API_KEY,
-      ...init?.headers,
-    },
-  })
-  if (!res.ok) {
-    const body = await res.json().catch(() => ({}))
-    throw new Error((body as any)?.error ?? `HTTP ${res.status}`)
+export interface LowStockProduct {
+  id: number
+  barcode: string
+  name: string
+  brand: string | null
+  category_name: string | null
+  quantity: number
+  min_stock: number
+  location: string | null
+}
+
+export interface StockHistoryEntry {
+  id: number
+  product_id: number
+  product_name: string
+  product_barcode: string
+  type: 'stock_in' | 'stock_out'
+  change_qty: number
+  reason: string | null
+  created_at: string
+}
+
+export interface DashboardStats {
+  totalProducts: number
+  totalStockValue: number
+  lowStockCount: number
+  todayTransactions: number
+}
+
+function getDesktopApi() {
+  if (!window.api) {
+    throw new Error('Electron inventory API is unavailable')
   }
-  return res.json() as Promise<T>
+
+  return window.api
 }
 
 export const api = {
-  getProducts:         ()                                                   => req<any[]>('/products'),
-  getProductByBarcode: (barcode: string)                                    => req<any>(`/products/barcode/${encodeURIComponent(barcode)}`),
-  addProduct:          (product: any)                                       => req<any>('/products', { method: 'POST', body: JSON.stringify(product) }),
-  updateProduct:       (id: number, product: any)                           => req<any>(`/products/${id}`, { method: 'PATCH', body: JSON.stringify(product) }),
-  stockIn:             (productId: number, qty: number, reason?: string)    => req<any>(`/products/${productId}/stock-in`,  { method: 'POST', body: JSON.stringify({ qty, reason }) }),
-  stockOut:            (productId: number, qty: number, reason?: string)    => req<any>(`/products/${productId}/stock-out`, { method: 'POST', body: JSON.stringify({ qty, reason }) }),
-  getLowStockProducts: ()                                                   => req<any[]>('/products/low-stock'),
-  getStockHistory:     (limit = 100)                                        => req<any[]>(`/history?limit=${limit}`),
-  getDashboardStats:   ()                                                   => req<any>('/dashboard/stats'),
+  getProducts: () => getDesktopApi().getProducts() as Promise<Product[]>,
+  getProductByBarcode: async (barcode: string) => {
+    const product = await getDesktopApi().getProductByBarcode(barcode)
+    if (!product) {
+      throw new Error('Product not found')
+    }
+    return product as Product
+  },
+  stockIn: (productId: number, qty: number, reason?: string) => getDesktopApi().stockIn(productId, qty, reason),
+  stockOut: (productId: number, qty: number, reason?: string) => getDesktopApi().stockOut(productId, qty, reason),
+  getLowStockProducts: () => getDesktopApi().getLowStockProducts() as Promise<LowStockProduct[]>,
+  getStockHistory: (limit = 100) => getDesktopApi().getStockHistory(limit) as Promise<StockHistoryEntry[]>,
+  getDashboardStats: () => getDesktopApi().getDashboardStats() as Promise<DashboardStats>,
 }
