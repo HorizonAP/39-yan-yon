@@ -43,6 +43,24 @@ export interface DashboardStats {
   todayTransactions: number
 }
 
+export interface Category {
+  id: number
+  name: string
+  description: string | null
+}
+
+export interface ProductInput {
+  barcode: string
+  name: string
+  brand?: string | null
+  categoryId?: number | null
+  costPrice: number
+  sellPrice: number
+  quantity?: number
+  minStock?: number
+  location?: string | null
+}
+
 function getDesktopApi() {
   if (!window.api) {
     throw new Error('Electron inventory API is unavailable')
@@ -53,6 +71,11 @@ function getDesktopApi() {
 
 export const api = {
   getProducts: () => getDesktopApi().getProducts() as Promise<Product[]>,
+  createProduct: (data: ProductInput) => getDesktopApi().createProduct(data) as Promise<Product>,
+  updateProduct: (id: number, data: Partial<ProductInput>) => getDesktopApi().updateProduct(id, data) as Promise<Product>,
+  deleteProduct: (id: number) => getDesktopApi().deleteProduct(id) as Promise<void>,
+  getCategories: () => getDesktopApi().getCategories() as Promise<Category[]>,
+  createCategory: (name: string, description?: string) => getDesktopApi().createCategory(name, description) as Promise<Category>,
   getProductByBarcode: async (barcode: string) => {
     const product = await getDesktopApi().getProductByBarcode(barcode)
     if (!product) {

@@ -48,6 +48,24 @@ export interface DashboardStats {
   todayTransactions: number
 }
 
+export interface CategoryItem {
+  id: number
+  name: string
+  description: string | null
+}
+
+export interface ProductInput {
+  barcode: string
+  name: string
+  brand?: string | null
+  categoryId?: number | null
+  costPrice: number
+  sellPrice: number
+  quantity?: number
+  minStock?: number
+  location?: string | null
+}
+
 function toIsoString(value: Date | string) {
   return value instanceof Date ? value.toISOString() : new Date(value).toISOString()
 }
@@ -275,6 +293,139 @@ export const dbOperations = {
       totalStockValue: Number(totalStockValue?.value ?? 0),
       lowStockCount: lowStockCount?.count ?? 0,
       todayTransactions: todayTransactions?.count ?? 0,
+    }
+  },
+
+  async getCategories(): Promise<CategoryItem[]> {
+    return db
+      .select({
+        id: categories.id,
+        name: categories.name,
+        description: categories.description,
+      })
+      .from(categories)
+      .orderBy(categories.name)
+  },
+
+  async createCategory(name: string, description?: string): Promise<CategoryItem> {
+    const [created] = await db
+      .insert(categories)
+      .values({
+        name: name.trim(),
+        description: description?.trim() || null,
+      })
+      .returning({
+        id: categories.id,
+        name: categories.name,
+        description: categories.description,
+      })
+
+    return created
+  },
+
+  async createProduct(data: ProductInput): Promise<InventoryProduct> {
+    const [created] = await db
+      .insert(products)
+      .values({
+        barcode: data.barcode.trim(),
+        name: data.name.trim(),
+        brand: data.brand?.trim() || null,
+        categoryId: data.categoryId ?? null,
+        costPrice: String(data.costPrice),
+        sellPrice: String(data.sellPrice),
+        quantity: data.quantity ?? 0,
+        minStock: data.minStock ?? 5,
+        location: data.location?.trim() || null,
+      })
+      .returning({
+        id: products.id,
+        barcode: products.barcode,
+        name: products.name,
+        brand: products.brand,
+        categoryId: products.categoryId,
+        costPrice: products.costPrice,
+        sellPrice: products.sellPrice,
+        quantity: products.quantity,
+        minStock: products.minStock,
+        location: products.location,
+        createdAt: products.createdAt,
+        updatedAt: products.updatedAt,
+      })
+
+    const [category] = created.categoryId
+      ? await db
+          .select({ name: categories.name })
+          .from(categories)
+          .where(eq(categories.id, created.categoryId))
+          .limit(1)
+      : []
+
+    return mapProduct({
+      ...created,
+      categoryName: category?.name ?? null,
+    })
+  },
+
+  async updateProduct(id: number, data: Partial<ProductInput>): Promise<InventoryProduct> {
+    const updatePatch: Record<string, unknown> = {
+      updatedAt: new Date(),
+    }
+
+    if (data.barcode !== undefined) updatePatch.barcode = data.barcode.trim()
+    if (data.name !== undefined) updatePatch.name = data.name.trim()
+    if ('brand' in data) updatePatch.brand = data.brand?.trim() || null
+    if ('categoryId' in data) updatePatch.categoryId = data.categoryId ?? null
+    if (data.costPrice !== undefined) updatePatch.costPrice = String(data.costPrice)
+    if (data.sellPrice !== undefined) updatePatch.sellPrice = String(data.sellPrice)
+    if (data.quantity !== undefined) updatePatch.quantity = data.quantity
+    if (data.minStock !== undefined) updatePatch.minStock = data.minStock
+    if ('location' in data) updatePatch.location = data.location?.trim() || null
+
+    const [updated] = await db
+      .update(products)
+      .set(updatePatch)
+      .where(eq(products.id, id))
+      .returning({
+        id: products.id,
+        barcode: products.barcode,
+        name: products.name,
+        brand: products.brand,
+        categoryId: products.categoryId,
+        costPrice: products.costPrice,
+        sellPrice: products.sellPrice,
+        quantity: products.quantity,
+        minStock: products.minStock,
+        location: products.location,
+        createdAt: products.createdAt,
+        updatedAt: products.updatedAt,
+      })
+
+    if (!updated) {
+      throw new Error('PRODUCT_NOT_FOUND')
+    }
+
+    const [category] = updated.categoryId
+      ? await db
+          .select({ name: categories.name })
+          .from(categories)
+          .where(eq(categories.id, updated.categoryId))
+          .limit(1)
+      : []
+
+    return mapProduct({
+      ...updated,
+      categoryName: category?.name ?? null,
+    })
+  },
+
+  async deleteProduct(id: number): Promise<void> {
+    const deleted = await db
+      .delete(products)
+      .where(eq(products.id, id))
+      .returning({ id: products.id })
+
+    if (deleted.length === 0) {
+      throw new Error('PRODUCT_NOT_FOUND')
     }
   },
 }

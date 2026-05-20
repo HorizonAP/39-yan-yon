@@ -45,8 +45,31 @@ interface InventoryDashboardStats {
   todayTransactions: number
 }
 
+interface InventoryCategory {
+  id: number
+  name: string
+  description: string | null
+}
+
+interface InventoryProductInput {
+  barcode: string
+  name: string
+  brand?: string | null
+  categoryId?: number | null
+  costPrice: number
+  sellPrice: number
+  quantity?: number
+  minStock?: number
+  location?: string | null
+}
+
 interface InventoryApi {
   getProducts: () => Promise<InventoryProduct[]>
+  createProduct: (data: InventoryProductInput) => Promise<InventoryProduct>
+  updateProduct: (id: number, data: Partial<InventoryProductInput>) => Promise<InventoryProduct>
+  deleteProduct: (id: number) => Promise<void>
+  getCategories: () => Promise<InventoryCategory[]>
+  createCategory: (name: string, description?: string) => Promise<InventoryCategory>
   getProductByBarcode: (barcode: string) => Promise<InventoryProduct | null>
   stockIn: (productId: number, qty: number, reason?: string) => Promise<{ id: number; quantity: number }>
   stockOut: (productId: number, qty: number, reason?: string) => Promise<{ id: number; quantity: number }>

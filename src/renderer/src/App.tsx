@@ -1,5 +1,5 @@
 import { Routes, Route, useNavigate, useLocation } from 'react-router-dom'
-import { LayoutDashboard, Barcode, Package2, History, Cog } from 'lucide-react'
+import { LayoutDashboard, Package2, History, Cog, PackagePlus, PackageMinus } from 'lucide-react'
 import { Toaster } from './components/ui/sonner'
 
 // Pages
@@ -9,10 +9,11 @@ import Products from './pages/Products'
 import HistoryPage from './pages/History'
 
 const navItems = [
-  { title: 'Dashboard', url: '/',        icon: LayoutDashboard },
-  { title: 'Scanner',   url: '/barcode', icon: Barcode },
-  { title: 'Products',  url: '/products',icon: Package2 },
-  { title: 'History',   url: '/history', icon: History },
+  { title: 'Dashboard', url: '/',          icon: LayoutDashboard },
+  { title: 'Stock In',  url: '/stock-in',  icon: PackagePlus },
+  { title: 'Stock Out', url: '/stock-out', icon: PackageMinus },
+  { title: 'Products',  url: '/products',  icon: Package2 },
+  { title: 'History',   url: '/history',   icon: History },
 ]
 
 export default function App() {
@@ -72,7 +73,8 @@ export default function App() {
       <main className="flex-1 overflow-y-auto bg-[#0e0e13]">
         <Routes>
           <Route path="/"         element={<Dashboard />} />
-          <Route path="/barcode"  element={<BarcodeScanner />} />
+          <Route path="/stock-in" element={<BarcodeScanner mode="in" />} />
+          <Route path="/stock-out" element={<BarcodeScanner mode="out" />} />
           <Route path="/products" element={<Products />} />
           <Route path="/history"  element={<HistoryPage />} />
         </Routes>

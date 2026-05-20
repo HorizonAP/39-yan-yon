@@ -1,9 +1,35 @@
-import { useQuery } from '@tanstack/react-query'
-import { api } from '../lib/api'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { api, type Product } from '../lib/api'
 import { Input } from '../components/ui/input'
 import { Button } from '../components/ui/button'
-import { Plus, Search, SlidersHorizontal } from 'lucide-react'
-import { useState } from 'react'
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '../components/ui/dialog'
+import { Plus, Search, SlidersHorizontal, PenSquare, Trash2 } from 'lucide-react'
+import { type FormEvent, useState } from 'react'
+import { toast } from 'sonner'
+
+interface ProductFormState {
+  barcode: string
+  name: string
+  brand: string
+  categoryId: string
+  costPrice: string
+  sellPrice: string
+  quantity: string
+  minStock: string
+  location: string
+}
+
+const initialFormState: ProductFormState = {
+  barcode: '',
+  name: '',
+  brand: '',
+  categoryId: '',
+  costPrice: '0',
+  sellPrice: '0',
+  quantity: '0',
+  minStock: '5',
+  location: '',
+}
 
 // ── Stock status badge ─────────────────────────────────────────────────────
 function AvailabilityBadge({ qty, min }: { qty: number; min: number }) {
@@ -14,17 +40,142 @@ function AvailabilityBadge({ qty, min }: { qty: number; min: number }) {
 
 export default function Products() {
   const [search, setSearch] = useState('')
+  const [openForm, setOpenForm] = useState(false)
+  const [openDelete, setOpenDelete] = useState(false)
+  const [editing, setEditing] = useState<Product | null>(null)
+  const [targetDelete, setTargetDelete] = useState<Product | null>(null)
+  const [form, setForm] = useState<ProductFormState>(initialFormState)
+  const [newCategoryName, setNewCategoryName] = useState('')
+
+  const queryClient = useQueryClient()
 
   const { data: products, isLoading } = useQuery({
     queryKey: ['products'],
     queryFn: () => api.getProducts()
   })
 
+  const { data: categories } = useQuery({
+    queryKey: ['categories'],
+    queryFn: () => api.getCategories()
+  })
+
+  const refreshProducts = () => {
+    queryClient.invalidateQueries({ queryKey: ['products'] })
+    queryClient.invalidateQueries({ queryKey: ['dashboardStats'] })
+    queryClient.invalidateQueries({ queryKey: ['lowStock'] })
+  }
+
+  const createProductMutation = useMutation({
+    mutationFn: () => api.createProduct({
+      barcode: form.barcode.trim(),
+      name: form.name.trim(),
+      brand: form.brand.trim() || null,
+      categoryId: form.categoryId ? Number(form.categoryId) : null,
+      costPrice: Number(form.costPrice || 0),
+      sellPrice: Number(form.sellPrice || 0),
+      quantity: Number(form.quantity || 0),
+      minStock: Number(form.minStock || 5),
+      location: form.location.trim() || null,
+    }),
+    onSuccess: () => {
+      refreshProducts()
+      toast.success('Product created')
+      closeForm()
+    },
+    onError: (err: any) => toast.error('Create product failed', { description: err?.message })
+  })
+
+  const updateProductMutation = useMutation({
+    mutationFn: () => api.updateProduct(editing!.id, {
+      barcode: form.barcode.trim(),
+      name: form.name.trim(),
+      brand: form.brand.trim() || null,
+      categoryId: form.categoryId ? Number(form.categoryId) : null,
+      costPrice: Number(form.costPrice || 0),
+      sellPrice: Number(form.sellPrice || 0),
+      quantity: Number(form.quantity || 0),
+      minStock: Number(form.minStock || 5),
+      location: form.location.trim() || null,
+    }),
+    onSuccess: () => {
+      refreshProducts()
+      toast.success('Product updated')
+      closeForm()
+    },
+    onError: (err: any) => toast.error('Update product failed', { description: err?.message })
+  })
+
+  const deleteProductMutation = useMutation({
+    mutationFn: () => api.deleteProduct(targetDelete!.id),
+    onSuccess: () => {
+      refreshProducts()
+      toast.success('Product deleted')
+      setOpenDelete(false)
+      setTargetDelete(null)
+    },
+    onError: (err: any) => toast.error('Delete product failed', { description: err?.message })
+  })
+
+  const createCategoryMutation = useMutation({
+    mutationFn: () => api.createCategory(newCategoryName.trim()),
+    onSuccess: async (created) => {
+      await queryClient.invalidateQueries({ queryKey: ['categories'] })
+      setForm((prev) => ({ ...prev, categoryId: String(created.id) }))
+      setNewCategoryName('')
+      toast.success('Category created')
+    },
+    onError: (err: any) => toast.error('Create category failed', { description: err?.message })
+  })
+
+  const closeForm = () => {
+    setOpenForm(false)
+    setEditing(null)
+    setForm(initialFormState)
+    setNewCategoryName('')
+  }
+
+  const openCreateForm = () => {
+    setEditing(null)
+    setForm(initialFormState)
+    setOpenForm(true)
+  }
+
+  const openEditForm = (product: Product) => {
+    setEditing(product)
+    setForm({
+      barcode: product.barcode,
+      name: product.name,
+      brand: product.brand ?? '',
+      categoryId: product.category_id ? String(product.category_id) : '',
+      costPrice: String(product.cost_price),
+      sellPrice: String(product.sell_price),
+      quantity: String(product.quantity),
+      minStock: String(product.min_stock),
+      location: product.location ?? '',
+    })
+    setOpenForm(true)
+  }
+
+  const onSubmitForm = (e: FormEvent) => {
+    e.preventDefault()
+    if (!form.barcode.trim() || !form.name.trim()) {
+      toast.error('Barcode and name are required')
+      return
+    }
+    if (editing) {
+      updateProductMutation.mutate()
+      return
+    }
+    createProductMutation.mutate()
+  }
+
   const filtered = products?.filter(p =>
     p.name.toLowerCase().includes(search.toLowerCase()) ||
     p.barcode.toLowerCase().includes(search.toLowerCase()) ||
     (p.brand ?? '').toLowerCase().includes(search.toLowerCase())
   )
+
+  const isSaving = createProductMutation.isPending || updateProductMutation.isPending
 
   return (
     <div className="p-7 space-y-6">
@@ -37,7 +188,7 @@ export default function Products() {
           </h1>
           <p className="text-[#acaab1] text-sm mt-1">Manage your motorcycle component fleet with precision.</p>
         </div>
-        <Button className="gap-2 text-[#0e0e13] font-semibold text-sm" style={{ background: 'linear-gradient(135deg, #6063ee, #a3a6ff)' }}>
+        <Button onClick={openCreateForm} className="gap-2 text-[#0e0e13] font-semibold text-sm" style={{ background: 'linear-gradient(135deg, #6063ee, #a3a6ff)' }}>
           <Plus size={15} /> Add New Product
         </Button>
       </div>
@@ -62,16 +213,16 @@ export default function Products() {
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-[rgba(72,71,77,0.30)]">
-              {['BARCODE', 'PRODUCT DETAILS', 'BRAND', 'COST', 'PRICE', 'STOCK', 'AVAILABILITY', 'LOCATION'].map(h => (
+              {['BARCODE', 'PRODUCT DETAILS', 'BRAND', 'COST', 'PRICE', 'STOCK', 'AVAILABILITY', 'LOCATION', 'ACTIONS'].map(h => (
                 <th key={h} className="text-left text-[10px] font-semibold text-[#76747b] tracking-wider px-5 py-3 first:rounded-tl-xl">{h}</th>
               ))}
             </tr>
           </thead>
           <tbody>
             {isLoading ? (
-              <tr><td colSpan={8} className="py-16 text-center text-[#acaab1]">Loading products...</td></tr>
+              <tr><td colSpan={9} className="py-16 text-center text-[#acaab1]">Loading products...</td></tr>
             ) : (filtered ?? []).length === 0 ? (
-              <tr><td colSpan={8} className="py-16 text-center">
+              <tr><td colSpan={9} className="py-16 text-center">
                 <div className="flex flex-col items-center gap-2">
                   <div className="w-12 h-12 rounded-full bg-[rgba(163,166,255,0.10)] flex items-center justify-center">
                     <Search size={20} className="text-[#a3a6ff] opacity-50" />
@@ -98,6 +249,27 @@ export default function Products() {
                   </td>
                   <td className="px-5 py-3"><AvailabilityBadge qty={p.quantity} min={p.min_stock} /></td>
                   <td className="px-5 py-3 text-xs text-[#acaab1]">{p.location || '—'}</td>
+                  <td className="px-5 py-3">
+                    <div className="flex items-center justify-end gap-2 opacity-80 group-hover:opacity-100 transition-opacity">
+                      <button
+                        type="button"
+                        onClick={() => openEditForm(p)}
+                        className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs text-[#acaab1] hover:text-[#f8f5fd] hover:bg-[rgba(163,166,255,0.12)]"
+                      >
+                        <PenSquare size={12} /> Edit
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setTargetDelete(p)
+                          setOpenDelete(true)
+                        }}
+                        className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs text-[#ff6e84] hover:bg-[rgba(255,110,132,0.16)]"
+                      >
+                        <Trash2 size={12} /> Delete
+                      </button>
+                    </div>
+                  </td>
                 </tr>
               ))
             )}
@@ -114,6 +286,206 @@ export default function Products() {
           </div>
         )}
       </div>
+
+      <Dialog open={openForm} onOpenChange={(open) => !open && closeForm()}>
+        <DialogContent className="sm:max-w-xl bg-[#1f1f26] border border-[rgba(72,71,77,0.40)] text-[#f8f5fd]">
+          <form onSubmit={onSubmitForm}>
+            <DialogHeader>
+              <DialogTitle>{editing ? 'Edit Product Master' : 'Create Product Master'}</DialogTitle>
+              <DialogDescription className="text-[#acaab1]">
+                Maintain core product data used by stock-in and stock-out workflow.
+              </DialogDescription>
+            </DialogHeader>
+
+            <div className="grid grid-cols-2 gap-3 py-4">
+              <div className="space-y-1">
+                <label htmlFor="product-barcode" className="text-xs font-medium text-[#acaab1]">
+                  Barcode <span className="text-[#ff6e84]">*</span>
+                </label>
+                <Input
+                  id="product-barcode"
+                  value={form.barcode}
+                  onChange={(e) => setForm((prev) => ({ ...prev, barcode: e.target.value }))}
+                  placeholder="e.g. 8851234567890"
+                  className="bg-[#0a0a0f] border-[rgba(72,71,77,0.40)]"
+                />
+              </div>
+              <div className="space-y-1">
+                <label htmlFor="product-name" className="text-xs font-medium text-[#acaab1]">
+                  Product name <span className="text-[#ff6e84]">*</span>
+                </label>
+                <Input
+                  id="product-name"
+                  value={form.name}
+                  onChange={(e) => setForm((prev) => ({ ...prev, name: e.target.value }))}
+                  placeholder="e.g. NGK Iridium Spark Plug"
+                  className="bg-[#0a0a0f] border-[rgba(72,71,77,0.40)]"
+                />
+              </div>
+              <div className="space-y-1">
+                <label htmlFor="product-brand" className="text-xs font-medium text-[#acaab1]">
+                  Brand <span className="text-[#76747b]">(optional)</span>
+                </label>
+                <Input
+                  id="product-brand"
+                  value={form.brand}
+                  onChange={(e) => setForm((prev) => ({ ...prev, brand: e.target.value }))}
+                  placeholder="e.g. NGK"
+                  className="bg-[#0a0a0f] border-[rgba(72,71,77,0.40)]"
+                />
+              </div>
+              <div className="space-y-1">
+                <label htmlFor="product-location" className="text-xs font-medium text-[#acaab1]">
+                  Storage location <span className="text-[#76747b]">(optional)</span>
+                </label>
+                <Input
+                  id="product-location"
+                  value={form.location}
+                  onChange={(e) => setForm((prev) => ({ ...prev, location: e.target.value }))}
+                  placeholder="e.g. Rack A2"
+                  className="bg-[#0a0a0f] border-[rgba(72,71,77,0.40)]"
+                />
+              </div>
+
+              <div className="col-span-2 space-y-1">
+                <label htmlFor="product-category" className="text-xs font-medium text-[#acaab1]">
+                  Category <span className="text-[#76747b]">(optional)</span>
+                </label>
+                <div className="grid grid-cols-[1fr_auto] gap-2">
+                  <select
+                    id="product-category"
+                    value={form.categoryId}
+                    onChange={(e) => setForm((prev) => ({ ...prev, categoryId: e.target.value }))}
+                    className="h-10 rounded-md bg-[#0a0a0f] border border-[rgba(72,71,77,0.40)] px-3 text-sm text-[#f8f5fd]"
+                  >
+                    <option value="">No category</option>
+                    {(categories ?? []).map((cat) => (
+                      <option key={cat.id} value={cat.id}>{cat.name}</option>
+                    ))}
+                  </select>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    disabled={!newCategoryName.trim() || createCategoryMutation.isPending}
+                    onClick={() => createCategoryMutation.mutate()}
+                    className="border-[rgba(72,71,77,0.40)] bg-[#0a0a0f] text-[#acaab1] hover:text-[#f8f5fd]"
+                  >
+                    + Category
+                  </Button>
+                </div>
+              </div>
+
+              <div className="col-span-2 space-y-1">
+                <label htmlFor="new-category-name" className="text-xs font-medium text-[#acaab1]">
+                  New category name <span className="text-[#76747b]">(for + Category button)</span>
+                </label>
+                <Input
+                  id="new-category-name"
+                  value={newCategoryName}
+                  onChange={(e) => setNewCategoryName(e.target.value)}
+                  placeholder="e.g. Engine Oil"
+                  className="bg-[#0a0a0f] border-[rgba(72,71,77,0.40)]"
+                />
+              </div>
+
+              <div className="space-y-1">
+                <label htmlFor="product-cost-price" className="text-xs font-medium text-[#acaab1]">
+                  Cost price <span className="text-[#76747b]">(optional)</span>
+                </label>
+                <Input
+                  id="product-cost-price"
+                  type="number"
+                  min="0"
+                  value={form.costPrice}
+                  onChange={(e) => setForm((prev) => ({ ...prev, costPrice: e.target.value }))}
+                  placeholder="0.00"
+                  className="bg-[#0a0a0f] border-[rgba(72,71,77,0.40)]"
+                />
+              </div>
+              <div className="space-y-1">
+                <label htmlFor="product-sell-price" className="text-xs font-medium text-[#acaab1]">
+                  Sell price <span className="text-[#76747b]">(optional)</span>
+                </label>
+                <Input
+                  id="product-sell-price"
+                  type="number"
+                  min="0"
+                  value={form.sellPrice}
+                  onChange={(e) => setForm((prev) => ({ ...prev, sellPrice: e.target.value }))}
+                  placeholder="0.00"
+                  className="bg-[#0a0a0f] border-[rgba(72,71,77,0.40)]"
+                />
+              </div>
+              <div className="space-y-1">
+                <label htmlFor="product-quantity" className="text-xs font-medium text-[#acaab1]">
+                  Initial quantity <span className="text-[#76747b]">(optional)</span>
+                </label>
+                <Input
+                  id="product-quantity"
+                  type="number"
+                  min="0"
+                  value={form.quantity}
+                  onChange={(e) => setForm((prev) => ({ ...prev, quantity: e.target.value }))}
+                  placeholder="0"
+                  className="bg-[#0a0a0f] border-[rgba(72,71,77,0.40)]"
+                />
+              </div>
+              <div className="space-y-1">
+                <label htmlFor="product-min-stock" className="text-xs font-medium text-[#acaab1]">
+                  Min stock alert <span className="text-[#76747b]">(optional)</span>
+                </label>
+                <Input
+                  id="product-min-stock"
+                  type="number"
+                  min="0"
+                  value={form.minStock}
+                  onChange={(e) => setForm((prev) => ({ ...prev, minStock: e.target.value }))}
+                  placeholder="5"
+                  className="bg-[#0a0a0f] border-[rgba(72,71,77,0.40)]"
+                />
+              </div>
+            </div>
+
+            <DialogFooter>
+              <Button type="button" variant="ghost" onClick={closeForm} className="text-[#acaab1] hover:text-[#f8f5fd]">
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                disabled={isSaving}
+                className="text-[#0e0e13] font-semibold"
+                style={{ background: 'linear-gradient(135deg, #6063ee, #a3a6ff)' }}
+              >
+                {isSaving ? 'Saving...' : editing ? 'Save Changes' : 'Create Product'}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={openDelete} onOpenChange={(open) => !open && setOpenDelete(false)}>
+        <DialogContent className="sm:max-w-md bg-[#1f1f26] border border-[rgba(72,71,77,0.40)] text-[#f8f5fd]">
+          <DialogHeader>
+            <DialogTitle>Delete Product</DialogTitle>
+            <DialogDescription className="text-[#acaab1]">
+              This will permanently delete <span className="font-semibold text-[#f8f5fd]">{targetDelete?.name}</span> from master data.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button type="button" variant="ghost" onClick={() => setOpenDelete(false)} className="text-[#acaab1] hover:text-[#f8f5fd]">
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              variant="destructive"
+              disabled={deleteProductMutation.isPending}
+              onClick={() => deleteProductMutation.mutate()}
+            >
+              {deleteProductMutation.isPending ? 'Deleting...' : 'Delete'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

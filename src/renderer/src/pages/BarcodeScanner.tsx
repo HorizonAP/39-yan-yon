@@ -18,15 +18,25 @@ interface ScanEntry {
   ts: number
 }
 
-export default function BarcodeScanner() {
+type ScannerMode = 'in' | 'out'
+
+interface BarcodeScannerProps {
+  mode: ScannerMode
+  title?: string
+}
+
+export default function BarcodeScanner({ mode, title }: BarcodeScannerProps) {
   const [barcode, setBarcode]         = useState('')
   const [scannedBarcode, setScanned]  = useState('')
   const [openAction, setOpenAction]   = useState<'in' | 'out' | null>(null)
   const [qty, setQty]                 = useState(1)
   const [reason, setReason]           = useState('')
   const [scanLog, setScanLog]         = useState<ScanEntry[]>([])
+  const [quickScan, setQuickScan]     = useState(false)
 
   const inputRef    = useRef<HTMLInputElement>(null)
+  const reasonRef   = useRef<HTMLInputElement>(null)
+  const justScanned = useRef(false)
   const queryClient = useQueryClient()
 
   useEffect(() => { inputRef.current?.focus() }, [])
@@ -46,43 +56,66 @@ export default function BarcodeScanner() {
   }
 
   const stockInMutation = useMutation({
-    mutationFn: () => api.stockIn(product!.id, qty, reason),
-    onSuccess: () => {
-      addToLog('stock_in')
+    mutationFn: ({ productId, quantity, note }: { productId: number, quantity: number, note: string }) =>
+      api.stockIn(productId, quantity, note || undefined),
+    onSuccess: (_, variables) => {
+      addToLog('stock_in', variables.quantity)
       invalidateAll()
-      toast.success(`Added ${qty} × ${product!.name}`)
+      toast.success(`Added ${variables.quantity} × ${product!.name}`)
       closeModal()
     },
     onError: (err: any) => toast.error('Stock In failed', { description: err.message })
   })
 
   const stockOutMutation = useMutation({
-    mutationFn: () => api.stockOut(product!.id, qty, reason),
-    onSuccess: () => {
-      addToLog('stock_out')
+    mutationFn: ({ productId, quantity, note }: { productId: number, quantity: number, note: string }) =>
+      api.stockOut(productId, quantity, note || undefined),
+    onSuccess: (_, variables) => {
+      addToLog('stock_out', variables.quantity)
       invalidateAll()
-      toast.success(`Dispensed ${qty} × ${product!.name}`)
+      toast.success(`Dispensed ${variables.quantity} × ${product!.name}`)
       closeModal()
     },
     onError: (err: any) => toast.error('Stock Out failed', { description: err.message })
   })
 
-  const addToLog = (type: 'stock_in' | 'stock_out') => {
+  const addToLog = (type: 'stock_in' | 'stock_out', changedQty: number) => {
     setScanLog(prev => [{
       id:      crypto.randomUUID(),
       type,
       name:    product!.name,
       barcode: product!.barcode,
-      qty,
+      qty:     changedQty,
       ts:      Date.now()
     }, ...prev.slice(0, 7)])
   }
 
+  const submitScan = (rawBarcode: string) => {
+    const trimmed = rawBarcode.trim()
+    if (!trimmed) return
+
+    if (product && scannedBarcode === trimmed) {
+      if (quickScan) {
+        if (mode === 'in') {
+          stockInMutation.mutate({ productId: product.id, quantity: 1, note: '' })
+        } else {
+          stockOutMutation.mutate({ productId: product.id, quantity: 1, note: '' })
+        }
+      } else {
+        handleAction(mode)
+      }
+      setBarcode('')
+      return
+    }
+
+    justScanned.current = true
+    setScanned(trimmed)
+    setBarcode('')
+  }
+
   const handleScan = (e: React.FormEvent) => {
     e.preventDefault()
-    if (!barcode.trim()) return
-    setScanned(barcode.trim())
-    setBarcode('')
+    submitScan(barcode)
   }
 
   const handleAction = (action: 'in' | 'out') => {
@@ -94,7 +127,38 @@ export default function BarcodeScanner() {
     inputRef.current?.focus()
   }
 
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!product || !openAction || qty <= 0 || isPending) return
+    if (openAction === 'in') {
+      stockInMutation.mutate({ productId: product.id, quantity: qty, note: reason })
+    } else {
+      stockOutMutation.mutate({ productId: product.id, quantity: qty, note: reason })
+    }
+  }
+
   const isPending = stockInMutation.isPending || stockOutMutation.isPending
+
+  useEffect(() => {
+    if (!product || !justScanned.current) return
+    justScanned.current = false
+
+    if (quickScan) {
+      if (mode === 'in') {
+        stockInMutation.mutate({ productId: product.id, quantity: 1, note: '' })
+      } else {
+        stockOutMutation.mutate({ productId: product.id, quantity: 1, note: '' })
+      }
+      return
+    }
+
+    handleAction(mode)
+  }, [mode, product, quickScan])
+
+  const pageTitle = title ?? (mode === 'in' ? 'Stock In Scanner' : 'Stock Out Scanner')
+  const pageDescription = mode === 'in'
+    ? 'Scan barcode to add incoming inventory quickly.'
+    : 'Scan barcode to withdraw inventory for fulfillment.'
 
   return (
     <div className="p-7 h-full flex gap-6">
@@ -103,16 +167,33 @@ export default function BarcodeScanner() {
         {/* Header */}
         <div>
           <h1 className="text-3xl font-bold text-[#f8f5fd]">
-            Inventory <span className="gradient-text">Scanner</span>
+            {pageTitle}
           </h1>
           <p className="text-[#acaab1] text-sm mt-1">
-            Process incoming stock or fulfill orders by scanning the unique part identifier.
+            {pageDescription}
           </p>
         </div>
 
         {/* Scan input */}
         <div className="glass-card p-5">
           <p className="text-[10px] font-semibold text-[#a3a6ff] tracking-widest mb-3">READY TO SCAN</p>
+          <div className="mb-3 flex items-center justify-between gap-3">
+            <span className="text-xs text-[#acaab1]">
+              Mode: <span className={mode === 'in' ? 'text-[#10b981] font-semibold' : 'text-[#f43f5e] font-semibold'}>{mode === 'in' ? 'STOCK IN' : 'STOCK OUT'}</span>
+            </span>
+            <button
+              type="button"
+              onClick={() => setQuickScan(v => !v)}
+              className={[
+                'inline-flex items-center gap-2 px-2.5 py-1.5 rounded-lg border text-[11px] font-semibold transition-all',
+                quickScan
+                  ? 'border-[rgba(250,204,21,0.40)] bg-[rgba(250,204,21,0.14)] text-[#facc15]'
+                  : 'border-[rgba(72,71,77,0.40)] bg-[rgba(0,0,0,0.28)] text-[#acaab1] hover:text-[#f8f5fd]'
+              ].join(' ')}
+            >
+              Quick Scan {quickScan ? 'ON' : 'OFF'}
+            </button>
+          </div>
           <form onSubmit={handleScan} className="flex gap-2">
             <div className="relative flex-1">
               <ScanLine size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#a3a6ff]" />
@@ -121,6 +202,12 @@ export default function BarcodeScanner() {
                 type="text"
                 value={barcode}
                 onChange={(e) => setBarcode(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Tab' && barcode.trim()) {
+                    e.preventDefault()
+                    submitScan(barcode)
+                  }
+                }}
                 placeholder="Aim scanner or type barcode..."
                 className="w-full pl-9 pr-4 py-3 rounded-lg bg-[rgba(0,0,0,0.40)] border border-[rgba(72,71,77,0.30)] text-[#f8f5fd] placeholder:text-[#76747b] text-sm focus:outline-none focus:border-[#a3a6ff] focus:ring-2 focus:ring-[rgba(163,166,255,0.15)] transition-all font-mono"
               />
@@ -190,18 +277,19 @@ export default function BarcodeScanner() {
             </div>
 
             {/* Actions */}
-            <div className="px-5 pb-5 flex gap-3">
+            <div className="px-5 pb-5">
               <button
-                onClick={() => handleAction('in')}
-                className="flex-1 flex items-center justify-center gap-2 py-3.5 rounded-xl text-sm font-bold text-[#f8f5fd] border border-[rgba(16,185,129,0.40)] bg-[rgba(16,185,129,0.12)] hover:bg-[rgba(16,185,129,0.20)] transition-all"
+                onClick={() => handleAction(mode)}
+                className={[
+                  'w-full flex items-center justify-center gap-2 py-3.5 rounded-xl text-sm font-bold text-[#f8f5fd] border transition-all',
+                  mode === 'in'
+                    ? 'border-[rgba(16,185,129,0.40)] bg-[rgba(16,185,129,0.12)] hover:bg-[rgba(16,185,129,0.20)]'
+                    : 'border-[rgba(244,63,94,0.40)] bg-[rgba(244,63,94,0.12)] hover:bg-[rgba(244,63,94,0.20)]'
+                ].join(' ')}
               >
-                <CheckCircle2 size={16} className="text-[#10b981]" /> STOCK IN
-              </button>
-              <button
-                onClick={() => handleAction('out')}
-                className="flex-1 flex items-center justify-center gap-2 py-3.5 rounded-xl text-sm font-bold text-[#f8f5fd] border border-[rgba(244,63,94,0.40)] bg-[rgba(244,63,94,0.12)] hover:bg-[rgba(244,63,94,0.20)] transition-all"
-              >
-                <MinusCircle size={16} className="text-[#f43f5e]" /> STOCK OUT
+                {mode === 'in'
+                  ? <><CheckCircle2 size={16} className="text-[#10b981]" /> PROCESS STOCK IN</>
+                  : <><MinusCircle size={16} className="text-[#f43f5e]" /> PROCESS STOCK OUT</>}
               </button>
             </div>
           </div>
@@ -263,45 +351,54 @@ export default function BarcodeScanner() {
       {/* ── Confirm Dialog ────────────────────────────────────────── */}
       <Dialog open={!!openAction} onOpenChange={(open) => !open && closeModal()}>
         <DialogContent className="sm:max-w-md bg-[#1f1f26] border border-[rgba(72,71,77,0.40)] text-[#f8f5fd]">
-          <DialogHeader>
-            <DialogTitle className="text-[#f8f5fd]">
-              {openAction === 'in' ? '✅ Stock In' : '📦 Stock Out'} — {product?.name}
-            </DialogTitle>
-            <DialogDescription className="text-[#acaab1]">
-              {openAction === 'in' ? 'Add items to inventory.' : 'Dispense items from inventory.'}
-            </DialogDescription>
-          </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <div className="grid gap-2">
-              <label className="text-sm font-medium text-[#acaab1]">Quantity</label>
-              <Input
-                type="number" min="1" autoFocus
-                value={qty}
-                onChange={(e) => setQty(parseInt(e.target.value) || 0)}
-                className="bg-[#0a0a0f] border-[rgba(72,71,77,0.40)] text-[#f8f5fd] text-lg h-12"
-              />
+          <form onSubmit={handleSubmit}>
+            <DialogHeader>
+              <DialogTitle className="text-[#f8f5fd]">
+                {openAction === 'in' ? 'Stock In' : 'Stock Out'} - {product?.name}
+              </DialogTitle>
+              <DialogDescription className="text-[#acaab1]">
+                {openAction === 'in' ? 'Add items to inventory.' : 'Dispense items from inventory.'}
+              </DialogDescription>
+            </DialogHeader>
+            <div className="grid gap-4 py-4">
+              <div className="grid gap-2">
+                <label className="text-sm font-medium text-[#acaab1]">Quantity</label>
+                <Input
+                  type="number" min="1" autoFocus
+                  value={qty}
+                  onChange={(e) => setQty(parseInt(e.target.value) || 0)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault()
+                      reasonRef.current?.focus()
+                    }
+                  }}
+                  className="bg-[#0a0a0f] border-[rgba(72,71,77,0.40)] text-[#f8f5fd] text-lg h-12"
+                />
+              </div>
+              <div className="grid gap-2">
+                <label className="text-sm font-medium text-[#acaab1]">Reason / Note <span className="text-[#76747b]">(optional)</span></label>
+                <Input
+                  ref={reasonRef}
+                  type="text" value={reason}
+                  onChange={(e) => setReason(e.target.value)}
+                  placeholder={openAction === 'in' ? 'e.g., Supplier Delivery' : 'e.g., Repair Job #123'}
+                  className="bg-[#0a0a0f] border-[rgba(72,71,77,0.40)] text-[#f8f5fd]"
+                />
+              </div>
             </div>
-            <div className="grid gap-2">
-              <label className="text-sm font-medium text-[#acaab1]">Reason / Note <span className="text-[#76747b]">(optional)</span></label>
-              <Input
-                type="text" value={reason}
-                onChange={(e) => setReason(e.target.value)}
-                placeholder={openAction === 'in' ? 'e.g., Supplier Delivery' : 'e.g., Repair Job #123'}
-                className="bg-[#0a0a0f] border-[rgba(72,71,77,0.40)] text-[#f8f5fd]"
-              />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="ghost" onClick={closeModal} className="text-[#acaab1] hover:text-[#f8f5fd]">Cancel</Button>
-            <Button
-              disabled={qty <= 0 || isPending}
-              onClick={() => openAction === 'in' ? stockInMutation.mutate() : stockOutMutation.mutate()}
-              className="text-[#0e0e13] font-semibold"
-              style={{ background: openAction === 'in' ? 'linear-gradient(135deg, #059669, #10b981)' : 'linear-gradient(135deg, #e11d48, #f43f5e)' }}
-            >
-              {isPending ? 'Processing...' : 'Confirm'}
-            </Button>
-          </DialogFooter>
+            <DialogFooter>
+              <Button type="button" variant="ghost" onClick={closeModal} className="text-[#acaab1] hover:text-[#f8f5fd]">Cancel</Button>
+              <Button
+                type="submit"
+                disabled={qty <= 0 || isPending}
+                className="text-[#0e0e13] font-semibold"
+                style={{ background: openAction === 'in' ? 'linear-gradient(135deg, #059669, #10b981)' : 'linear-gradient(135deg, #e11d48, #f43f5e)' }}
+              >
+                {isPending ? 'Processing...' : 'Confirm'}
+              </Button>
+            </DialogFooter>
+          </form>
         </DialogContent>
       </Dialog>
     </div>

@@ -37,6 +37,11 @@ function createWindow(): void {
 
 function registerInventoryHandlers() {
   ipcMain.handle('inventory:getProducts', () => dbOperations.getProducts())
+  ipcMain.handle('inventory:createProduct', (_event, data) => dbOperations.createProduct(data))
+  ipcMain.handle('inventory:updateProduct', (_event, id: number, data) => dbOperations.updateProduct(id, data))
+  ipcMain.handle('inventory:deleteProduct', (_event, id: number) => dbOperations.deleteProduct(id))
+  ipcMain.handle('inventory:getCategories', () => dbOperations.getCategories())
+  ipcMain.handle('inventory:createCategory', (_event, name: string, description?: string) => dbOperations.createCategory(name, description))
   ipcMain.handle('inventory:getProductByBarcode', (_event, barcode: string) => dbOperations.getProductByBarcode(barcode))
   ipcMain.handle('inventory:stockIn', (_event, productId: number, qty: number, reason?: string) => dbOperations.stockIn(productId, qty, reason))
   ipcMain.handle('inventory:stockOut', (_event, productId: number, qty: number, reason?: string) => dbOperations.stockOut(productId, qty, reason))

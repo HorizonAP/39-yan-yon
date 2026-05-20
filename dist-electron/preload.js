@@ -1,1 +1,97 @@
-let e=require(`electron`);var t={ipcRenderer:{send(t,...n){e.ipcRenderer.send(t,...n)},sendTo(t,n,...r){let i=process.versions.electron;if((i?parseInt(i.split(`.`)[0]):0)>=28)throw Error(`"sendTo" method has been removed since Electron 28.`);e.ipcRenderer.sendTo(t,n,...r)},sendSync(t,...n){return e.ipcRenderer.sendSync(t,...n)},sendToHost(t,...n){e.ipcRenderer.sendToHost(t,...n)},postMessage(t,n,r){e.ipcRenderer.postMessage(t,n,r)},invoke(t,...n){return e.ipcRenderer.invoke(t,...n)},on(t,n){return e.ipcRenderer.on(t,n),()=>{e.ipcRenderer.removeListener(t,n)}},once(t,n){return e.ipcRenderer.once(t,n),()=>{e.ipcRenderer.removeListener(t,n)}},removeListener(t,n){return e.ipcRenderer.removeListener(t,n),this},removeAllListeners(t){e.ipcRenderer.removeAllListeners(t)}},webFrame:{insertCSS(t){return e.webFrame.insertCSS(t)},setZoomFactor(t){typeof t==`number`&&t>0&&e.webFrame.setZoomFactor(t)},setZoomLevel(t){typeof t==`number`&&e.webFrame.setZoomLevel(t)}},webUtils:{getPathForFile(t){return e.webUtils.getPathForFile(t)}},process:{get platform(){return process.platform},get versions(){return process.versions},get env(){return{...process.env}}}},n={getProducts:()=>e.ipcRenderer.invoke(`inventory:getProducts`),getProductByBarcode:t=>e.ipcRenderer.invoke(`inventory:getProductByBarcode`,t),stockIn:(t,n,r)=>e.ipcRenderer.invoke(`inventory:stockIn`,t,n,r),stockOut:(t,n,r)=>e.ipcRenderer.invoke(`inventory:stockOut`,t,n,r),getLowStockProducts:()=>e.ipcRenderer.invoke(`inventory:getLowStockProducts`),getStockHistory:t=>e.ipcRenderer.invoke(`inventory:getStockHistory`,t),getDashboardStats:()=>e.ipcRenderer.invoke(`inventory:getDashboardStats`)};if(process.contextIsolated)try{e.contextBridge.exposeInMainWorld(`electron`,t),e.contextBridge.exposeInMainWorld(`api`,n)}catch(e){console.error(e)}else window.electron=t,window.api=n;
+let electron = require("electron");
+//#region node_modules/@electron-toolkit/preload/dist/index.mjs
+var electronAPI = {
+	ipcRenderer: {
+		send(channel, ...args) {
+			electron.ipcRenderer.send(channel, ...args);
+		},
+		sendTo(webContentsId, channel, ...args) {
+			const electronVer = process.versions.electron;
+			if ((electronVer ? parseInt(electronVer.split(".")[0]) : 0) >= 28) throw new Error("\"sendTo\" method has been removed since Electron 28.");
+			else electron.ipcRenderer.sendTo(webContentsId, channel, ...args);
+		},
+		sendSync(channel, ...args) {
+			return electron.ipcRenderer.sendSync(channel, ...args);
+		},
+		sendToHost(channel, ...args) {
+			electron.ipcRenderer.sendToHost(channel, ...args);
+		},
+		postMessage(channel, message, transfer) {
+			electron.ipcRenderer.postMessage(channel, message, transfer);
+		},
+		invoke(channel, ...args) {
+			return electron.ipcRenderer.invoke(channel, ...args);
+		},
+		on(channel, listener) {
+			electron.ipcRenderer.on(channel, listener);
+			return () => {
+				electron.ipcRenderer.removeListener(channel, listener);
+			};
+		},
+		once(channel, listener) {
+			electron.ipcRenderer.once(channel, listener);
+			return () => {
+				electron.ipcRenderer.removeListener(channel, listener);
+			};
+		},
+		removeListener(channel, listener) {
+			electron.ipcRenderer.removeListener(channel, listener);
+			return this;
+		},
+		removeAllListeners(channel) {
+			electron.ipcRenderer.removeAllListeners(channel);
+		}
+	},
+	webFrame: {
+		insertCSS(css) {
+			return electron.webFrame.insertCSS(css);
+		},
+		setZoomFactor(factor) {
+			if (typeof factor === "number" && factor > 0) electron.webFrame.setZoomFactor(factor);
+		},
+		setZoomLevel(level) {
+			if (typeof level === "number") electron.webFrame.setZoomLevel(level);
+		}
+	},
+	webUtils: { getPathForFile(file) {
+		return electron.webUtils.getPathForFile(file);
+	} },
+	process: {
+		get platform() {
+			return process.platform;
+		},
+		get versions() {
+			return process.versions;
+		},
+		get env() {
+			return { ...process.env };
+		}
+	}
+};
+//#endregion
+//#region src/preload/index.ts
+var inventoryApi = {
+	getProducts: () => electron.ipcRenderer.invoke("inventory:getProducts"),
+	createProduct: (data) => electron.ipcRenderer.invoke("inventory:createProduct", data),
+	updateProduct: (id, data) => electron.ipcRenderer.invoke("inventory:updateProduct", id, data),
+	deleteProduct: (id) => electron.ipcRenderer.invoke("inventory:deleteProduct", id),
+	getCategories: () => electron.ipcRenderer.invoke("inventory:getCategories"),
+	createCategory: (name, description) => electron.ipcRenderer.invoke("inventory:createCategory", name, description),
+	getProductByBarcode: (barcode) => electron.ipcRenderer.invoke("inventory:getProductByBarcode", barcode),
+	stockIn: (productId, qty, reason) => electron.ipcRenderer.invoke("inventory:stockIn", productId, qty, reason),
+	stockOut: (productId, qty, reason) => electron.ipcRenderer.invoke("inventory:stockOut", productId, qty, reason),
+	getLowStockProducts: () => electron.ipcRenderer.invoke("inventory:getLowStockProducts"),
+	getStockHistory: (limit) => electron.ipcRenderer.invoke("inventory:getStockHistory", limit),
+	getDashboardStats: () => electron.ipcRenderer.invoke("inventory:getDashboardStats")
+};
+if (process.contextIsolated) try {
+	electron.contextBridge.exposeInMainWorld("electron", electronAPI);
+	electron.contextBridge.exposeInMainWorld("api", inventoryApi);
+} catch (error) {
+	console.error(error);
+}
+else {
+	window.electron = electronAPI;
+	window.api = inventoryApi;
+}
+//#endregion
